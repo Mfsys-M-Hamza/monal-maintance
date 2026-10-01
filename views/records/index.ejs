@@ -1,0 +1,37 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1>Records</h1><p>Search every operational record you can access. <%= result.total %> result(s).</p></div></div>
+<form class="filters" method="get" action="/records" role="search">
+  <div class="field" style="flex:2 1 220px"><label for="r-q">Search</label><input id="r-q" type="search" name="q" value="<%= f.q %>" placeholder="Site, meter, remarks, person…"></div>
+  <div class="field"><label for="r-site">Site</label><select id="r-site" name="site"><option value="all">All my sites</option>
+    <% for (const s of userSites) { %><option value="<%= s.id %>" <%= String(f.site) === String(s.id) ? 'selected' : '' %>><%= s.name %></option><% } %></select></div>
+  <div class="field"><label for="r-type">Record type</label><select id="r-type" name="type"><option value="">All types</option>
+    <% for (const [k, t] of Object.entries(types)) { %><option value="<%= k %>" <%= f.type === k ? 'selected' : '' %>><%= t.label %></option><% } %></select></div>
+  <div class="field"><label for="r-from">From</label><input id="r-from" type="date" name="from" value="<%= f.from %>"></div>
+  <div class="field"><label for="r-to">To</label><input id="r-to" type="date" name="to" value="<%= f.to %>"></div>
+  <label class="check" style="flex:0 0 auto;margin-bottom:.6rem"><input type="checkbox" name="mine" value="1" <%= f.mine ? 'checked' : '' %>> <span>Only mine</span></label>
+  <button class="btn btn-navy" type="submit">Search</button>
+</form>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Date</th><th>Site</th><th>Record type</th><th>Summary</th><th>Entered by</th><th>Last updated</th><th></th></tr></thead>
+    <tbody>
+    <% if (!result.rows.length) { %><tr><td colspan="7" class="empty">No records match your search.</td></tr><% } %>
+    <% for (const r of result.rows) { %>
+      <tr>
+        <td data-label="Date" class="nowrap"><%= r.type === 'bill' ? time.formatMonth(r.date.slice(0, 7)) : time.formatDate(r.date) %></td>
+        <td data-label="Site"><%= r.site_name %></td>
+        <td data-label="Type"><span class="badge badge-info"><%= r.type_label %></span></td>
+        <td data-label="Summary"><%= r.summary %><% if (r.remarks) { %><div class="muted small"><%= r.remarks %></div><% } %></td>
+        <td data-label="Entered by"><%= r.entered_by || '—' %></td>
+        <td data-label="Updated" class="nowrap small"><%= time.formatTimestamp(r.updated_at) %></td>
+        <td class="actions-cell">
+          <a class="btn btn-outline btn-sm" href="<%= r.view_path %>">View</a>
+          <% if (r.can_edit && r.type !== 'maintenance') { %><a class="btn btn-outline btn-sm" href="<%= r.view_path %>/edit">Edit</a><% } %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- ui.pagination('/records', Object.fromEntries(Object.entries(query).filter(([k]) => k !== 'page')), result.page, result.pages) %>
+<%- include('../partials/bottom') %>

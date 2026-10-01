@@ -1,0 +1,31 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Meters</h1><p>Multiple meters per site, for the project site or accommodation. Replacements, resets and corrections are recorded as meter events.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/admin/meters/new<%= site ? '?site_id=' + site : '' %>">+ New meter</a></div>
+</div>
+<form class="filters" method="get" action="/admin/meters">
+  <div class="field"><label for="m-site">Site</label><select id="m-site" name="site" data-autosubmit><option value="">All sites</option>
+    <% for (const s of sites) { %><option value="<%= s.id %>" <%= site === s.id ? 'selected' : '' %>><%= s.name %></option><% } %></select></div>
+</form>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Site</th><th>Meter</th><th>Location</th><th>Account ref</th><th>Serial</th><th>Baseline</th><th>Last reading</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <% if (!meters.length) { %><tr><td colspan="9" class="empty">No meters configured yet.</td></tr><% } %>
+    <% for (const m of meters) { %>
+      <tr>
+        <td data-label="Site"><%= m.site_name %></td>
+        <td data-label="Meter"><a href="/admin/meters/<%= m.id %>"><%= m.name %></a> <% if (m.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Location"><%= m.location === 'site' ? 'Project site' : 'Accommodation' %></td>
+        <td data-label="Account"><%= m.account_ref || '—' %></td>
+        <td data-label="Serial"><%= m.serial_no || '—' %></td>
+        <td data-label="Baseline"><%= fmt.num(m.initial_reading) %> on <%= time.formatDate(m.initial_date) %></td>
+        <td data-label="Last reading"><%= m.last_reading_date ? time.formatDate(m.last_reading_date) : '—' %></td>
+        <td data-label="Status"><%- ui.badge(m.is_active ? 'Active' : 'Inactive') %><%= m.is_required ? '' : ' (optional)' %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/admin/meters/<%= m.id %>">Events</a> <a class="btn btn-outline btn-sm" href="/admin/meters/<%= m.id %>/edit">Edit</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

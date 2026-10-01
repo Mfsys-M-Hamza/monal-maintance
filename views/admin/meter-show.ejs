@@ -1,0 +1,41 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1><%= meter.name %> <%- ui.badge(meter.is_active ? 'Active' : 'Inactive') %></h1><p><%= siteName %> · <%= meter.location === 'site' ? 'Project site' : 'Accommodation' %> · Account <%= meter.account_ref || '—' %> · Serial <%= meter.serial_no || '—' %></p></div>
+  <div class="actions"><a class="btn btn-outline" href="/admin/meters/<%= meter.id %>/edit">Edit meter</a><a class="btn btn-outline" href="/electricity?meter=<%= meter.id %>">Readings</a></div>
+</div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Record meter event</h2>
+    <p class="small muted">Use this when a meter is <strong>replaced</strong>, <strong>reset</strong> to zero, or a reading must be <strong>corrected</strong>. Readings on or after the event date use the new starting reading as their previous reading. If you enter the old meter's final reading, the consumption up to that reading is included in the first reading after the event.</p>
+    <p class="small">Last recorded reading: <strong><%= last ? `${fmt.num(last.current_reading)} on ${time.formatDate(last.record_date)}` : `none (baseline ${fmt.num(meter.initial_reading)})` %></strong></p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/admin/meters/<%= meter.id %>/events" data-confirm="Record this meter event? Later readings for this meter will be recalculated." novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="form-grid">
+        <%- ui.select({ name: 'event_type', label: 'Event type', required: true, value: values.event_type, options: [{ value: 'replacement', label: 'Meter replacement' }, { value: 'reset', label: 'Meter reset / rollover' }, { value: 'correction', label: 'Reading correction' }], errors }) %>
+        <%- ui.input({ name: 'event_date', type: 'date', label: 'Event date', required: true, value: values.event_date, max: today, errors }) %>
+        <%- ui.input({ name: 'old_final_reading', type: 'number', label: 'Old meter final reading', value: values.old_final_reading, step: 'any', min: 0, unit: 'kWh', errors, hint: 'Optional. Leave empty if unknown.' }) %>
+        <%- ui.input({ name: 'new_start_reading', type: 'number', label: 'New starting reading', required: true, value: values.new_start_reading, step: 'any', min: 0, unit: 'kWh', errors }) %>
+        <%- ui.input({ name: 'new_serial_no', label: 'New meter serial (replacement)', value: values.new_serial_no, errors }) %>
+        <%- ui.textarea({ name: 'reason', label: 'Reason', required: true, value: values.reason, errors }) %>
+      </div>
+      <div class="form-actions"><button class="btn btn-navy" type="submit">Record event</button></div>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Meter events</h2>
+    <% if (!events.length) { %><p class="muted">No events recorded.</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const e of events) { %>
+        <li><span><strong><%= e.event_type %></strong> on <%= time.formatDate(e.event_date) %><br>
+          <span class="small">Old final: <%= e.old_final_reading === null ? '—' : fmt.num(e.old_final_reading) %> · New start: <%= fmt.num(e.new_start_reading) %></span><br>
+          <span class="muted small"><%= e.reason %> — <%= e.created_by_name || 'system' %>, <%= time.formatTimestamp(e.created_at) %></span></span>
+          <form method="post" action="/admin/meter-events/<%= e.id %>/delete" class="inline-form" data-confirm="Remove this meter event? Readings will be recalculated without it.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-danger btn-sm" type="submit">Remove</button></form></li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/history') %>
+<%- include('../partials/bottom') %>

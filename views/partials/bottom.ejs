@@ -1,0 +1,16 @@
+    </main>
+  </div>
+</div>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title">
+  <h2 id="confirm-title">Please confirm</h2>
+  <p id="confirm-text"></p>
+  <div class="actions" style="justify-content:flex-end">
+    <button type="button" class="btn btn-outline" data-confirm-cancel>Cancel</button>
+    <button type="button" class="btn btn-danger" data-confirm-ok>Yes, continue</button>
+  </div>
+</dialog>
+<script src="/static/js/app.js"></script>
+<% for (const s of (locals.scripts || [])) { %><script src="<%= s %>"></script>
+<% } %>
+</body>
+</html>

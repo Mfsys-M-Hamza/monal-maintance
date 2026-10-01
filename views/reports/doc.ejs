@@ -1,0 +1,36 @@
+<%# Renders a report document (services/reports.js). Same structure as PDF/Excel/CSV exports. %>
+<div class="report-meta">
+  <div><strong>Reporting period:</strong> <%= doc.periodLabel %></div>
+  <div><strong>Site:</strong> <%= doc.siteLabel %></div>
+  <div><strong>Generated:</strong> <%= doc.generatedAt %> (<%= doc.timeZone %>)</div>
+  <% if (doc.filters.length) { %><div><strong>Filters:</strong> <%= doc.filters.join('; ') %></div><% } %>
+</div>
+<div class="kpis">
+  <% for (const k of doc.kpis) { %>
+    <div class="kpi"><div class="kpi-label"><%= k.label %></div>
+      <div class="kpi-value"><% if (k.type === 'pkr') { %><small>PKR</small> <%= k.value === null ? 'N/A' : fmt.pkr(k.value) %><% } else { %><%= fmt.kpiValue(k) %><% if (k.value !== null) { %><small><%= k.unit %></small><% } %><% } %></div>
+      <% if (k.pct !== undefined || k.note) { %><div class="kpi-note"><% if (k.pct !== undefined) { %>vs previous month: <strong><%= k.pct === null ? 'N/A' : fmt.pct(k.pct) %></strong><% } %><%= k.note ? ' ' + k.note : '' %></div><% } %>
+    </div>
+  <% } %>
+</div>
+<% for (const s of doc.sections) { const isNum = (c) => ['num', 'int', 'pkr', 'pct'].includes(c.type); %>
+<section class="report-section">
+  <h2><%= s.title %><%= s.unit ? ` (${s.unit})` : '' %></h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><% for (const c of s.columns) { %><th class="<%= isNum(c) ? 'num' : '' %>"><%= c.label %></th><% } %></tr></thead>
+      <tbody>
+        <% if (!s.rows.length) { %><tr><td colspan="<%= s.columns.length %>" class="empty">No records for the selected filters.</td></tr><% } %>
+        <% for (const r of s.rows) { %>
+          <tr><% for (const c of s.columns) { %><td class="<%= isNum(c) ? 'num' : '' %>"><%= fmt.cell(c, r[c.key]) %></td><% } %></tr>
+        <% } %>
+      </tbody>
+      <% if (s.totals && s.rows.length) { %>
+      <tfoot><tr><% s.columns.forEach((c, i) => { %><td class="<%= isNum(c) ? 'num' : '' %>"><%= i === 0 ? 'Total' : (c.key in s.totals ? fmt.cell(c, s.totals[c.key]) : '') %></td><% }) %></tr></tfoot>
+      <% } %>
+    </table>
+  </div>
+  <% if (s.notes && s.notes.length) { %><ul class="notes"><% for (const n of s.notes) { %><li><%= n %></li><% } %></ul><% } %>
+</section>
+<% } %>
+<% if (doc.notes) { %><p class="small muted"><%= doc.notes.join(' ') %></p><% } %>

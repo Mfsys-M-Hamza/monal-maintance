@@ -1,0 +1,13 @@
+<% if (locals.currentUser) { %>
+<%- include('../partials/top') %>
+<div class="card" style="max-width:640px">
+  <h1><%= status === 404 ? 'Not found' : status === 403 ? 'Access denied' : status === 423 ? 'Period locked' : 'Something went wrong' %></h1>
+  <p><%= message %></p>
+  <div class="actions"><a class="btn btn-primary" href="/">Go to dashboard</a></div>
+</div>
+<%- include('../partials/bottom') %>
+<% } else { %>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title><%= title %></title><link rel="stylesheet" href="/static/css/app.css"></head>
+<body><div class="auth-page"><div class="auth-card"><h1><%= title %></h1><p class="sub"><%= message %></p><a class="btn btn-primary" href="/login">Go to sign in</a></div></div></body></html>
+<% } %>

@@ -1,0 +1,34 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Generator diesel</h1><p>Diesel consumed = Opening + Received − Closing, recorded per tank. Shared tanks are counted once.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/diesel/new">+ New diesel record</a></div>
+</div>
+<% const tankSel = `<div class="field"><label for="flt-tank">Tank / generator</label><select id="flt-tank" name="tank"><option value="">All tanks</option>${tanks.map((t) => `<option value="${t.id}" ${String(query.tank) === String(t.id) ? 'selected' : ''}>${ui.esc(t.site_name + ' — ' + t.label)}</option>`).join('')}</select></div>`; %>
+<%- include('../partials/list-filters', { action: '/diesel', extra: tankSel }) %>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Total diesel consumed</div><div class="kpi-value"><%= fmt.num(totalL, 2) %><small>L</small></div><div class="kpi-note"><%= time.formatDate(f.from) %> – <%= time.formatDate(f.to) %></div></div>
+  <div class="kpi"><div class="kpi-label">Records</div><div class="kpi-value"><%= pg.total %></div></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Date</th><th>Site</th><th>Tank</th><th class="num">Opening (L)</th><th class="num">Received (L)</th><th class="num">Closing (L)</th><th class="num">Consumed (L)</th><th>Recorded by</th><th></th></tr></thead>
+    <tbody>
+    <% if (!rows.length) { %><tr><td colspan="9" class="empty">No diesel records for these filters. <a href="/diesel/new">Add one</a>.</td></tr><% } %>
+    <% for (const r of rows) { %>
+      <tr>
+        <td data-label="Date" class="nowrap"><%= time.formatDate(r.record_date) %> <% if (r.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Site"><%= r.site_name %></td>
+        <td data-label="Tank"><%= r.tank_name %> <span class="muted small">(<%= r.tank_type %>)</span></td>
+        <td data-label="Opening" class="num"><%= fmt.num(r.opening_l) %></td>
+        <td data-label="Received" class="num"><%= fmt.num(r.received_l) %></td>
+        <td data-label="Closing" class="num"><%= fmt.num(r.closing_l) %></td>
+        <td data-label="Consumed" class="num"><strong><%= fmt.num(r.consumed_l) %></strong><% if (r.opening_mismatch) { %> <span class="badge badge-warn">opening ≠ prev. closing</span><% } %></td>
+        <td data-label="Recorded by"><%= r.recorded_by %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/diesel/<%= r.id %>">View</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- ui.pagination('/diesel', Object.fromEntries(Object.entries(query).filter(([k]) => k !== 'page')), pg.page, pg.pages) %>
+<%- include('../partials/bottom') %>

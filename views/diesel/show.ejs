@@ -1,0 +1,33 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Diesel record <% if (rec.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></h1><p><%= rec.site_name %> · <%= rec.tank_label %> · <%= time.formatDate(rec.record_date) %></p></div>
+  <%- include('../partials/record-actions', { base: '/diesel' }) %>
+</div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Stock balance (litres)</h2>
+    <dl class="details">
+      <dt>Project site</dt><dd><%= rec.site_name %></dd>
+      <dt>Generator / tank</dt><dd><%= rec.tank_label %> <span class="badge badge-muted"><%= rec.tank_type %> tank</span></dd>
+      <dt>Date</dt><dd><%= time.formatDate(rec.record_date) %></dd>
+      <dt>Opening stock</dt><dd><%= fmt.num(rec.opening_l) %> L
+        <% if (rec.opening_mismatch) { %><br><span class="badge badge-warn">Differs from previous closing stock (<%= fmt.num(rec.expected_opening) %> L)</span><% } %></dd>
+      <dt>Received</dt><dd><%= fmt.num(rec.received_l) %> L</dd>
+      <dt>Closing stock</dt><dd><%= fmt.num(rec.closing_l) %> L</dd>
+      <dt>Diesel consumed</dt><dd><strong style="font-size:1.2rem"><%= fmt.num(rec.consumed_l) %> L</strong></dd>
+      <dt>Related generator runtime</dt><dd><%= fmt.num(rec.runtime_hours) %> h</dd>
+      <dt>Diesel per operating hour</dt><dd><%= rec.l_per_hour === null ? 'N/A' : fmt.num(rec.l_per_hour) + ' L/h' %></dd>
+      <dt>Recorded by</dt><dd><%= rec.recorded_by %></dd>
+      <dt>Remarks</dt><dd><%= rec.remarks || '—' %></dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Record information</h2>
+    <dl class="details">
+      <dt>Created by</dt><dd><%= createdBy || '—' %> · <%= time.formatTimestamp(rec.created_at) %></dd>
+      <dt>Last updated by</dt><dd><%= updatedBy || '—' %> · <%= time.formatTimestamp(rec.updated_at) %></dd>
+    </dl>
+  </section>
+</div>
+<%- include('../partials/history') %>
+<%- include('../partials/bottom') %>

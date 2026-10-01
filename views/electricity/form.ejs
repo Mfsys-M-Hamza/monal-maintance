@@ -1,0 +1,44 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= title %></h1><p>Enter today's meter reading. The previous reading is filled in automatically.</p></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <div id="entry-notice" hidden></div>
+  <form method="post" action="<%= record ? `/electricity/${record.id}` : '/electricity' %>" data-form="electricity" <%- record ? `data-record-id="${record.id}"` : '' %> novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (record) { %>
+        <div class="field"><label>Project site</label><input type="text" readonly value="<%= record.site_name %>"></div>
+        <div class="field"><label>Meter</label><input type="text" readonly value="<%= record.meter_name %> (<%= record.location === 'site' ? 'Project site' : 'Accommodation' %>)"></div>
+        <input type="hidden" name="meter_id" value="<%= record.meter_id %>">
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors, dataset: { 'site-source': '1' } }) %>
+        <div class="field<%= errors.meter_id ? ' has-error' : '' %>">
+          <label for="f-meter_id">Meter &amp; location <span class="req">*</span></label>
+          <select id="f-meter_id" name="meter_id" required data-site-filtered="site_id">
+            <option value="">Select meter…</option>
+            <% for (const m of meters) { %><option value="<%= m.id %>" data-site="<%= m.site_id %>" <%= String(values.meter_id) === String(m.id) ? 'selected' : '' %>><%= m.name %> — <%= m.location === 'site' ? 'Project site' : 'Accommodation' %></option><% } %>
+          </select>
+          <% if (errors.meter_id) { %><small class="error-text" role="alert"><%= errors.meter_id %></small><% } %>
+        </div>
+      <% } %>
+      <%- ui.input({ name: 'record_date', type: 'date', label: 'Record date', required: true, value: values.record_date, max: today, errors }) %>
+      <%- ui.input({ name: 'current_reading', type: 'number', label: 'Current meter reading', required: true, value: values.current_reading, step: 'any', min: 0, inputmode: 'decimal', unit: 'kWh', errors }) %>
+    </div>
+    <div class="calc" id="calc-box" aria-live="polite">
+      <div class="calc-row"><span>Previous reading <small class="muted" id="prev-source"></small></span><strong id="prev-reading">—</strong></div>
+      <div class="calc-row"><span>Consumption</span><span class="calc-result" id="consumption">—</span></div>
+      <div class="formula">Consumption = Current reading − Previous reading</div>
+    </div>
+    <div class="form-grid">
+      <%- ui.input({ name: 'recorded_by', label: 'Recorded by', required: true, value: values.recorded_by, errors, autocomplete: 'name' }) %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors }) %>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= record ? 'Save changes' : 'Save reading' %></button>
+      <% if (!record) { %><button class="btn btn-outline" type="submit" name="next" value="another">Save &amp; add another meter</button><% } %>
+      <a class="btn btn-outline" href="<%= record ? `/electricity/${record.id}` : '/electricity' %>">Cancel</a>
+    </div>
+  </form>
+</div>
+<% if (!record) { %><p class="muted small">Meter replaced, reset, or misread? An admin must record a meter event (Admin → Meters) before entering a lower reading.</p><% } %>
+<%- include('../partials/bottom') %>

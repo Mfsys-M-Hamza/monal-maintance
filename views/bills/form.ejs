@@ -1,0 +1,59 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= title %></h1><p>One bill per meter per billing month. The category (project site / accommodation) comes from the meter.</p></div></div>
+<div class="card" style="max-width:900px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= record ? `/bills/${record.id}` : '/bills' %>?_csrf=<%= csrfToken %>" enctype="multipart/form-data" data-form="bill" <%- record ? `data-record-id="${record.id}"` : '' %> novalidate>
+    <fieldset>
+      <legend>Bill</legend>
+      <div class="form-grid">
+        <% if (record) { %>
+          <div class="field"><label>Project site</label><input type="text" readonly value="<%= record.site_name %>"></div>
+          <div class="field"><label>Meter</label><input type="text" readonly value="<%= record.meter_name %> — <%= record.category === 'site' ? 'Project site' : 'Accommodation' %>"></div>
+        <% } else { %>
+          <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors, dataset: { 'site-source': '1' } }) %>
+          <div class="field<%= errors.meter_id ? ' has-error' : '' %>">
+            <label for="f-meter_id">Meter <span class="req">*</span></label>
+            <select id="f-meter_id" name="meter_id" required data-site-filtered="site_id">
+              <option value="">Select meter…</option>
+              <% for (const m of meters) { %><option value="<%= m.id %>" data-site="<%= m.site_id %>" data-location="<%= m.location %>" data-account="<%= m.account_ref || '' %>" <%= String(values.meter_id) === String(m.id) ? 'selected' : '' %>><%= m.name %> — <%= m.location === 'site' ? 'Project site' : 'Accommodation' %></option><% } %>
+            </select>
+            <small class="hint">Bill category: <strong id="bill-category">—</strong></small>
+            <% if (errors.meter_id) { %><small class="error-text"><%= errors.meter_id %></small><% } %>
+          </div>
+        <% } %>
+        <%- ui.input({ name: 'account_ref', label: 'Account / reference number', value: values.account_ref, errors }) %>
+        <%- ui.input({ name: 'billing_month', type: 'month', label: 'Billing month', required: true, value: values.billing_month, errors }) %>
+        <%- ui.input({ name: 'period_start', type: 'date', label: 'Billing period start', required: true, value: values.period_start, errors }) %>
+        <%- ui.input({ name: 'period_end', type: 'date', label: 'Billing period end', required: true, value: values.period_end, errors }) %>
+        <%- ui.input({ name: 'billed_units', type: 'number', label: 'Billed electricity units', required: true, value: values.billed_units, step: 'any', min: 0, inputmode: 'decimal', unit: 'kWh', errors }) %>
+        <%- ui.input({ name: 'amount_pkr', type: 'number', label: 'Bill amount', required: true, value: values.amount_pkr, step: 'any', min: 0, inputmode: 'decimal', unit: 'PKR', errors }) %>
+        <%- ui.input({ name: 'due_date', type: 'date', label: 'Due date', value: values.due_date, errors }) %>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Payment</legend>
+      <div class="form-grid">
+        <%- ui.input({ name: 'amount_paid', type: 'number', label: 'Amount paid', value: values.amount_paid, step: 'any', min: 0, inputmode: 'decimal', unit: 'PKR', errors, placeholder: '0' }) %>
+        <%- ui.input({ name: 'payment_date', type: 'date', label: 'Payment date', value: values.payment_date, max: today, errors }) %>
+      </div>
+      <div class="calc" id="calc-box" aria-live="polite">
+        <div class="calc-row"><span>Outstanding balance</span><span class="calc-result" id="outstanding">—</span></div>
+        <div class="calc-row"><span>Payment status</span><strong id="pay-status">—</strong></div>
+      </div>
+    </fieldset>
+    <div class="form-grid">
+      <div class="field<%= errors.attachment ? ' has-error' : '' %>">
+        <label for="f-attachment">Bill attachment</label>
+        <input id="f-attachment" type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+        <small class="hint">PDF, JPG or PNG, max 5 MB.<%= files.length ? ` ${files.length} file(s) already attached.` : '' %></small>
+        <% if (errors.attachment) { %><small class="error-text"><%= errors.attachment %></small><% } %>
+      </div>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors }) %>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= record ? 'Save changes' : 'Save bill' %></button>
+      <a class="btn btn-outline" href="<%= record ? `/bills/${record.id}` : '/bills' %>">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

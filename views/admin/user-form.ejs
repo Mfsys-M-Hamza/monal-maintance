@@ -1,0 +1,42 @@
+<%- include('../partials/top') %>
+<%
+  const selected = (values.site_ids ? (Array.isArray(values.site_ids) ? values.site_ids : [values.site_ids]) : []).map(String);
+%>
+<div class="page-head"><div><h1><%= entity ? `Edit user: ${entity.username}` : 'New user' %></h1></div><div class="actions"><a class="btn btn-outline" href="/admin/users">Back to users</a></div></div>
+<div class="grid grid-2">
+  <section class="card">
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="<%= entity ? `/admin/users/${entity.id}` : '/admin/users' %>" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (!entity) { %>
+        <%- ui.input({ name: 'username', label: 'Username', required: true, value: values.username, errors, autocomplete: 'off', hint: '3–50 letters, numbers, dots, dashes or underscores.' }) %>
+      <% } %>
+      <%- ui.input({ name: 'full_name', label: 'Full name', required: true, value: values.full_name, errors }) %>
+      <%- ui.input({ name: 'email', type: 'email', label: 'Email (optional)', value: values.email, errors }) %>
+      <%- ui.select({ name: 'role', label: 'Role', required: true, value: values.role || 'user', errors, options: [{ value: 'user', label: 'User — assigned sites only' }, { value: 'admin', label: 'Admin — all sites and settings' }] }) %>
+      <div class="field<%= errors.site_ids ? ' has-error' : '' %>">
+        <span style="display:block;font-weight:600;font-size:.88rem;margin-bottom:.3rem">Assigned sites (users only)</span>
+        <% for (const s of sites) { %><label class="check"><input type="checkbox" name="site_ids" value="<%= s.id %>" <%= selected.includes(String(s.id)) ? 'checked' : '' %>> <span><%= s.name %><%= s.is_active ? '' : ' (inactive)' %></span></label><% } %>
+        <% if (errors.site_ids) { %><small class="error-text"><%= errors.site_ids %></small><% } %>
+      </div>
+      <% if (!entity) { %>
+        <%- ui.input({ name: 'password', type: 'password', label: 'Temporary password', required: true, errors, autocomplete: 'new-password', hint: 'At least 10 characters with letters and numbers. The user must change it at first sign-in.' }) %>
+      <% } else { %>
+        <%- ui.checkbox({ name: 'is_active', label: 'Account active', checked: !!Number(values.is_active) }) %>
+      <% } %>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Save user</button></div>
+    </form>
+  </section>
+  <% if (entity) { %>
+  <section class="card">
+    <h2>Reset password</h2>
+    <p class="small muted">Set a temporary password and share it with the user through a secure channel. They will be signed out and must choose a new password at next sign-in.</p>
+    <form method="post" action="/admin/users/<%= entity.id %>/reset-password" data-confirm="Reset this user's password? They will be signed out of all sessions." novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <%- ui.input({ name: 'password', type: 'password', label: 'New temporary password', required: true, errors: {}, autocomplete: 'new-password' }) %>
+      <button class="btn btn-navy" type="submit">Reset password</button>
+    </form>
+  </section>
+  <% } %>
+</div>
+<%- include('../partials/bottom') %>

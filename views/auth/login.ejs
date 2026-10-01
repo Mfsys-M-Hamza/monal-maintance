@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f2a4a">
+  <title>Sign in · Utilities & Maintenance</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<main class="auth-page">
+  <div class="auth-card">
+    <div class="brand-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+    <h1>Project Utilities &amp; Maintenance</h1>
+    <p class="sub">Sign in with the account provided by your administrator.</p>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/login" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" required value="<%= username %>" autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+    </form>
+    <p class="hint" style="text-align:center;margin-top:1rem">Forgot your password? Ask an administrator to reset it.</p>
+  </div>
+</main>
+</body>
+</html>

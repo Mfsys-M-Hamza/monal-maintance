@@ -1,0 +1,24 @@
+<section class="card">
+  <div class="card-head"><h2>Change history</h2><span class="muted small">Audit trail · Asia/Karachi time</span></div>
+  <% if (!history.length) { %><p class="muted">No changes recorded.</p><% } else { %>
+  <div class="table-wrap"><table>
+    <thead><tr><th>When</th><th>Action</th><th>By</th><th>Changes</th></tr></thead>
+    <tbody>
+    <% for (const h of history) { %>
+      <tr>
+        <td class="nowrap"><%= time.formatTimestamp(h.created_at) %></td>
+        <td><%- ui.badge(h.action, h.action === 'delete' ? 'danger' : h.action === 'create' ? 'ok' : 'info') %></td>
+        <td><%= h.username %></td>
+        <td>
+          <% if (h.reason) { %><div class="small"><strong>Reason:</strong> <%= h.reason %></div><% } %>
+          <% if (h.action === 'update' || h.action === 'complete' || h.action === 'reschedule') { %>
+            <% if (!h.changes.length) { %><span class="muted small">No field changes</span><% } %>
+            <% for (const c of h.changes) { %><div class="small"><strong><%= c.field %></strong>: <%- ui.auditValue(c.before) %> → <%- ui.auditValue(c.after) %></div><% } %>
+          <% } else { %><span class="muted small"><%= h.action === 'create' ? 'Record created' : h.action === 'delete' ? 'Record deleted (soft delete)' : '' %></span><% } %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table></div>
+  <% } %>
+</section>

@@ -1,0 +1,48 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>WAPDA electricity bills</h1><p>Separate bills for project sites and accommodation. Amounts in PKR.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/bills/new">+ New bill</a></div>
+</div>
+<form class="filters" method="get" action="/bills">
+  <div class="field"><label for="b-site">Site</label><select id="b-site" name="site"><option value="all">All my sites</option>
+    <% for (const s of userSites) { %><option value="<%= s.id %>" <%= String(f.site) === String(s.id) ? 'selected' : '' %>><%= s.name %></option><% } %></select></div>
+  <div class="field"><label for="b-cat">Category</label><select id="b-cat" name="category"><option value="">Site &amp; accommodation</option>
+    <option value="site" <%= f.category === 'site' ? 'selected' : '' %>>Project site</option><option value="accommodation" <%= f.category === 'accommodation' ? 'selected' : '' %>>Accommodation</option></select></div>
+  <div class="field"><label for="b-st">Payment status</label><select id="b-st" name="status"><option value="">Any</option>
+    <% for (const st of ['Unpaid', 'Partially Paid', 'Paid']) { %><option <%= f.status === st ? 'selected' : '' %>><%= st %></option><% } %></select></div>
+  <div class="field"><label for="b-from">From month</label><input id="b-from" type="month" name="from_month" value="<%= f.fromMonth %>"></div>
+  <div class="field"><label for="b-to">To month</label><input id="b-to" type="month" name="to_month" value="<%= f.toMonth %>"></div>
+  <button class="btn btn-navy" type="submit">Apply</button>
+</form>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Billed</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(totals.amount) %></div><div class="kpi-note"><%= rows.length %> bill(s)</div></div>
+  <div class="kpi"><div class="kpi-label">Paid</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(totals.paid) %></div></div>
+  <div class="kpi <%= totals.outstanding > 0 ? 'warn' : '' %>"><div class="kpi-label">Outstanding</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(totals.outstanding) %></div></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Month</th><th>Site</th><th>Category</th><th>Meter / account</th><th class="num">Units (kWh)</th><th class="num">Amount (PKR)</th><th class="num">Paid (PKR)</th><th class="num">Outstanding (PKR)</th><th>Due</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <% if (!rows.length) { %><tr><td colspan="11" class="empty">No bills for these filters. <a href="/bills/new">Add a bill</a>.</td></tr><% } %>
+    <% for (const b of rows) { %>
+      <tr>
+        <td data-label="Month" class="nowrap"><%= time.formatMonth(b.billing_month) %> <% if (b.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Site"><%= b.site_name %></td>
+        <td data-label="Category"><%= b.category === 'site' ? 'Project site' : 'Accommodation' %></td>
+        <td data-label="Meter"><%= b.meter_name %><div class="muted small"><%= b.account_ref || '' %></div></td>
+        <td data-label="Units" class="num"><%= fmt.num(b.billed_units, 0) %></td>
+        <td data-label="Amount" class="num"><%= fmt.pkr(b.amount_pkr) %></td>
+        <td data-label="Paid" class="num"><%= fmt.pkr(b.amount_paid) %></td>
+        <td data-label="Outstanding" class="num"><strong><%= fmt.pkr(b.outstanding) %></strong></td>
+        <td data-label="Due" class="nowrap"><%= b.due_date ? time.formatDate(b.due_date) : '—' %><% if (b.overdue) { %> <span class="badge badge-danger">overdue</span><% } %></td>
+        <td data-label="Status"><%- ui.badge(b.payment_status) %><%= b.attachment_count ? ' 📎' : '' %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/bills/<%= b.id %>">View</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+    <% if (rows.length) { %>
+    <tfoot><tr><td colspan="5">Total</td><td class="num" data-label="Amount"><%= fmt.pkr(totals.amount) %></td><td class="num" data-label="Paid"><%= fmt.pkr(totals.paid) %></td><td class="num" data-label="Outstanding"><%= fmt.pkr(totals.outstanding) %></td><td colspan="3"></td></tr></tfoot>
+    <% } %>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

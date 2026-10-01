@@ -1,0 +1,40 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= title %></h1><p>Daily diesel stock for a generator tank. For a shared tank, enter one record covering all connected generators.</p></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <div id="entry-notice" hidden></div>
+  <form method="post" action="<%= record ? `/diesel/${record.id}` : '/diesel' %>" data-form="stock" data-kind="diesel" data-scope="tank_id" data-unit="L" <%- record ? `data-record-id="${record.id}"` : '' %> novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (record) { %>
+        <div class="field"><label>Project site</label><input type="text" readonly value="<%= record.site_name %>"></div>
+        <div class="field"><label>Generator / tank</label><input type="text" readonly value="<%= record.tank_label %>"></div>
+        <input type="hidden" name="tank_id" value="<%= record.tank_id %>">
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors, dataset: { 'site-source': '1' } }) %>
+        <div class="field<%= errors.tank_id ? ' has-error' : '' %>">
+          <label for="f-tank_id">Generator / tank <span class="req">*</span></label>
+          <select id="f-tank_id" name="tank_id" required data-site-filtered="site_id">
+            <option value="">Select generator / tank…</option>
+            <% for (const t of tanks) { %><option value="<%= t.id %>" data-site="<%= t.site_id %>" <%= String(values.tank_id) === String(t.id) ? 'selected' : '' %>><%= t.label %></option><% } %>
+          </select>
+          <small class="hint">Individual tank = one generator. Shared tank = one record for all connected generators.</small>
+          <% if (errors.tank_id) { %><small class="error-text" role="alert"><%= errors.tank_id %></small><% } %>
+        </div>
+      <% } %>
+      <%- ui.input({ name: 'record_date', type: 'date', label: 'Date', required: true, value: values.record_date, max: today, errors }) %>
+    </div>
+    <%- include('../partials/stock-fields', { unitLabel: 'L', formula: 'Diesel consumed = Opening stock + Received − Closing stock (litres)' }) %>
+    <div class="form-grid">
+      <%- ui.input({ name: 'recorded_by', label: 'Recorded by', required: true, value: values.recorded_by, errors }) %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors }) %>
+    </div>
+    <p class="small muted">Related generator runtime is taken automatically from the generator logbook for this date.</p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= record ? 'Save changes' : 'Save record' %></button>
+      <% if (!record) { %><button class="btn btn-outline" type="submit" name="next" value="another">Save &amp; add another</button><% } %>
+      <a class="btn btn-outline" href="<%= record ? `/diesel/${record.id}` : '/diesel' %>">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

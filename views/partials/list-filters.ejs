@@ -1,0 +1,15 @@
+<%# expects: f (site, from, to, mine), action; optional: extra (html) %>
+<form class="filters no-print" method="get" action="<%= action %>" role="search">
+  <div class="field">
+    <label for="flt-site">Site</label>
+    <select id="flt-site" name="site">
+      <option value="all">All my sites</option>
+      <% for (const s of userSites) { %><option value="<%= s.id %>" <%= String(f.site) === String(s.id) ? 'selected' : '' %>><%= s.name %><%= s.is_active ? '' : ' (inactive)' %></option><% } %>
+    </select>
+  </div>
+  <div class="field"><label for="flt-from">From</label><input id="flt-from" type="date" name="from" value="<%= f.from %>"></div>
+  <div class="field"><label for="flt-to">To</label><input id="flt-to" type="date" name="to" value="<%= f.to %>"></div>
+  <%- locals.extra || '' %>
+  <label class="check" style="flex:0 0 auto;margin-bottom:.6rem"><input type="checkbox" name="mine" value="1" <%= f.mine ? 'checked' : '' %>> <span>Only mine</span></label>
+  <button class="btn btn-navy" type="submit">Apply</button>
+</form>

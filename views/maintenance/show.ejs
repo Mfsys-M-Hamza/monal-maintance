@@ -1,0 +1,97 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1><%= task.item_name %> <%- ui.badge(task.display_status) %> <% if (task.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></h1>
+    <p><%= task.site_name %> · <%= task.category %> · <%= task.frequency_label %></p></div>
+  <div class="actions">
+    <% if (isAdmin) { %><a class="btn btn-outline" href="/maintenance/items/<%= item.id %>/edit">Edit item</a><% } %>
+    <a class="btn btn-outline" href="/maintenance">Back to tasks</a>
+  </div>
+</div>
+<% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Task</h2>
+    <dl class="details">
+      <dt>Project site</dt><dd><%= task.site_name %></dd>
+      <dt>Duct / equipment / area</dt><dd><%= task.item_name %></dd>
+      <dt>Cleaning frequency</dt><dd><%= task.frequency_label %></dd>
+      <dt>Last completed</dt><dd><%= task.last_completed_date ? time.formatDate(task.last_completed_date) : '—' %></dd>
+      <dt>Scheduled date</dt><dd><%= time.formatDate(task.scheduled_date) %><% if (task.schedule_overridden) { %> <span class="badge badge-muted">admin override</span><% } %></dd>
+      <dt>Assigned person / vendor</dt><dd><%= task.assigned_to || '—' %></dd>
+      <dt>Status</dt><dd><%- ui.badge(task.display_status) %></dd>
+      <% if (task.status === 'completed') { %>
+        <dt>Completion date</dt><dd><%= time.formatDate(task.completion_date) %></dd>
+        <dt>Completed by</dt><dd><%= task.completed_by_name %></dd>
+        <dt>Remarks</dt><dd><%= task.remarks || '—' %></dd>
+      <% } %>
+    </dl>
+    <% if (files.length) { %>
+      <h3 style="margin-top:1rem">Supporting documents</h3>
+      <ul class="list-plain"><% for (const fl of files) { %><li><a href="/files/<%= fl.id %>?inline=1" target="_blank" rel="noopener"><%= fl.original_name %></a><span class="muted small"><%= Math.ceil(fl.size_bytes / 1024) %> KB</span></li><% } %></ul>
+    <% } %>
+  </section>
+
+  <% if (task.status === 'open') { %>
+  <section class="card">
+    <h2>Mark as completed</h2>
+    <form method="post" action="/maintenance/tasks/<%= task.id %>/complete?_csrf=<%= csrfToken %>" enctype="multipart/form-data" novalidate>
+      <%- ui.input({ name: 'completion_date', type: 'date', label: 'Completion date', required: true, value: values.completion_date, max: today, errors }) %>
+      <%- ui.input({ name: 'completed_by_name', label: 'Completed by (person / vendor)', required: true, value: values.completed_by_name, errors }) %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors }) %>
+      <div class="field<%= errors.attachment ? ' has-error' : '' %>">
+        <label for="f-attachment">Photo or document (optional)</label>
+        <input id="f-attachment" type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf" capture="environment">
+        <small class="hint">PDF, JPG or PNG, max 5 MB.</small>
+        <% if (errors.attachment) { %><small class="error-text"><%= errors.attachment %></small><% } %>
+      </div>
+      <% if (isAdmin) { %>
+        <%- ui.input({ name: 'next_date_override', type: 'date', label: 'Next scheduled date (admin override)', value: values.next_date_override, errors,
+          hint: `Leave empty to calculate automatically: completion date + ${task.frequency_label.replace('Every ', '').toLowerCase()} (e.g. ${time.formatDate(suggestedNext)} if completed today).` }) %>
+      <% } else { %>
+        <p class="small muted">The next cleaning will be scheduled automatically from the completion date.</p>
+      <% } %>
+      <div class="form-actions"><button class="btn btn-primary" type="submit">Complete &amp; schedule next</button></div>
+    </form>
+  </section>
+  <% } %>
+</div>
+
+<% if (isAdmin && task.status === 'open') { %>
+<section class="card">
+  <h2>Adjust schedule (admin)</h2>
+  <form method="post" action="/maintenance/tasks/<%= task.id %>/reschedule" class="form-grid" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <%- ui.input({ name: 'scheduled_date', type: 'date', label: 'Scheduled date', required: true, value: task.scheduled_date, errors: locals.rescheduleErrors || {} }) %>
+    <%- ui.input({ name: 'assigned_to', label: 'Assigned person / vendor', value: task.assigned_to, errors: locals.rescheduleErrors || {} }) %>
+    <%- ui.input({ name: 'reason', label: 'Reason for change', required: true, errors: locals.rescheduleErrors || {}, cls: 'span-2' }) %>
+    <div class="span-2 actions">
+      <button class="btn btn-navy" type="submit">Update schedule</button>
+    </div>
+  </form>
+  <form method="post" action="/maintenance/tasks/<%= task.id %>/delete" data-confirm="Delete this scheduled task? The item and its history remain." style="margin-top:.6rem">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <button class="btn btn-danger btn-sm" type="submit">Delete task</button>
+  </form>
+</section>
+<% } %>
+
+<section class="card">
+  <h2>History for this item</h2>
+  <div class="table-wrap"><table class="responsive">
+    <thead><tr><th>Scheduled</th><th>Status</th><th>Completed</th><th>By</th><th>Remarks</th><th>Files</th></tr></thead>
+    <tbody>
+      <% for (const h of historyRows) { %>
+      <tr<%- h.id === task.id ? ' style="background:var(--teal-50)"' : '' %>>
+        <td data-label="Scheduled"><a href="/maintenance/tasks/<%= h.id %>"><%= time.formatDate(h.scheduled_date) %></a></td>
+        <td data-label="Status"><%- ui.badge(h.display_status) %></td>
+        <td data-label="Completed"><%= h.completion_date ? time.formatDate(h.completion_date) : '—' %></td>
+        <td data-label="By"><%= h.completed_by_name || '—' %></td>
+        <td data-label="Remarks"><%= h.remarks || '' %></td>
+        <td data-label="Files"><% for (const fl of h.files) { %><a href="/files/<%= fl.id %>?inline=1" target="_blank" rel="noopener">📎</a> <% } %></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table></div>
+</section>
+<%- include('../partials/history', { history: audit }) %>
+<%- include('../partials/bottom') %>

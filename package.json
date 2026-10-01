@@ -1,0 +1,34 @@
+{
+  "name": "utilities-management",
+  "version": "1.0.0",
+  "description": "Project Utilities & Maintenance Management System",
+  "main": "src/server.js",
+  "private": true,
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "dev": "node --no-warnings=ExperimentalWarning --watch src/server.js",
+    "db:init": "node --no-warnings=ExperimentalWarning scripts/init-db.js",
+    "create-admin": "node --no-warnings=ExperimentalWarning scripts/create-admin.js",
+    "demo:seed": "node --no-warnings=ExperimentalWarning scripts/demo.js seed",
+    "demo:remove": "node --no-warnings=ExperimentalWarning scripts/demo.js remove",
+    "test": "node --no-warnings=ExperimentalWarning --test \"test/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "ejs": "^6.0.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
+    "pdfkit": "^0.20.2"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

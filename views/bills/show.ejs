@@ -1,0 +1,51 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>WAPDA bill — <%= time.formatMonth(rec.billing_month) %> <%- ui.badge(rec.payment_status) %> <% if (rec.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></h1>
+    <p><%= rec.site_name %> · <%= rec.category === 'site' ? 'Project site' : 'Accommodation' %> · <%= rec.meter_name %></p></div>
+  <%- include('../partials/record-actions', { base: '/bills' }) %>
+</div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Bill details</h2>
+    <dl class="details">
+      <dt>Project site</dt><dd><%= rec.site_name %></dd>
+      <dt>Bill category</dt><dd><%= rec.category === 'site' ? 'Project site' : 'Accommodation' %></dd>
+      <dt>Meter / account</dt><dd><%= rec.meter_name %> · <%= rec.account_ref || '—' %></dd>
+      <dt>Billing month</dt><dd><%= time.formatMonth(rec.billing_month) %></dd>
+      <dt>Billing period</dt><dd><%= time.formatDate(rec.period_start) %> – <%= time.formatDate(rec.period_end) %></dd>
+      <dt>Billed units</dt><dd><%= fmt.num(rec.billed_units, 0) %> kWh</dd>
+      <dt>Bill amount</dt><dd><strong>PKR <%= fmt.pkr(rec.amount_pkr) %></strong></dd>
+      <dt>Due date</dt><dd><%= rec.due_date ? time.formatDate(rec.due_date) : '—' %><% if (rec.overdue) { %> <span class="badge badge-danger">overdue</span><% } %></dd>
+      <dt>Amount paid</dt><dd>PKR <%= fmt.pkr(rec.amount_paid) %><%= rec.payment_date ? ' on ' + time.formatDate(rec.payment_date) : '' %></dd>
+      <dt>Outstanding balance</dt><dd><strong style="font-size:1.15rem">PKR <%= fmt.pkr(rec.outstanding) %></strong></dd>
+      <dt>Payment status</dt><dd><%- ui.badge(rec.payment_status) %></dd>
+      <dt>Remarks</dt><dd><%= rec.remarks || '—' %></dd>
+    </dl>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Billed vs recorded consumption</h2><%- ui.badge(comparison.status) %></div>
+    <dl class="details">
+      <dt>Billed units</dt><dd><%= fmt.num(rec.billed_units, 0) %> kWh</dd>
+      <dt>Recorded meter consumption</dt><dd><%= comparison.readings_count ? fmt.num(comparison.recorded_kwh) + ' kWh' : 'N/A' %></dd>
+      <dt>Readings in period</dt><dd><%= comparison.readings_count %> of <%= comparison.days_in_period %> days<%= comparison.missing_days ? ` (${comparison.missing_days} missing)` : '' %></dd>
+      <dt>Variance</dt><dd><% if (comparison.comparable) { %><strong><%= comparison.variance_kwh >= 0 ? '+' : '' %><%= fmt.num(comparison.variance_kwh) %> kWh</strong> (<%= comparison.variance_pct === null ? 'N/A' : (comparison.variance_pct >= 0 ? '+' : '') + comparison.variance_pct + '%' %>)<% } else { %>Cannot be compared reliably<% } %></dd>
+    </dl>
+    <% if (comparison.issues.length) { %><div class="alert alert-warn" style="margin-top:1rem"><ul style="margin:0;padding-left:1rem"><% for (const i of comparison.issues) { %><li><%= i %></li><% } %></ul></div><% } %>
+    <p class="small muted">Recorded consumption = sum of daily meter consumption for dates after the period start up to the period end. It is exact only when readings exist on both boundary dates; missing days in between are still covered by the next reading.</p>
+    <h3 style="margin-top:1rem">Attachments</h3>
+    <% if (!files.length) { %><p class="muted small">No bill attached.</p><% } else { %>
+      <ul class="list-plain">
+        <% for (const fl of files) { %>
+          <li><span><a href="/files/<%= fl.id %>?inline=1" target="_blank" rel="noopener"><%= fl.original_name %></a> <span class="muted small"><%= Math.ceil(fl.size_bytes / 1024) %> KB</span></span>
+            <% if (perms.canEdit) { %><form method="post" action="/bills/<%= rec.id %>/attachments/<%= fl.id %>/delete" class="inline-form" data-confirm="Remove this attachment?"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-danger btn-sm" type="submit">Remove</button></form><% } %></li>
+        <% } %>
+      </ul>
+    <% } %>
+    <dl class="details" style="margin-top:1rem">
+      <dt>Created by</dt><dd><%= createdBy || '—' %> · <%= time.formatTimestamp(rec.created_at) %></dd>
+      <dt>Last updated by</dt><dd><%= updatedBy || '—' %> · <%= time.formatTimestamp(rec.updated_at) %></dd>
+    </dl>
+  </section>
+</div>
+<%- include('../partials/history') %>
+<%- include('../partials/bottom') %>

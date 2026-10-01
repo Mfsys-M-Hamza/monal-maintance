@@ -1,0 +1,144 @@
+<%- include('partials/top', { scripts: ['/static/vendor/chart.umd.min.js', '/static/js/dashboard.js'] }) %>
+<%
+  const s = summary;
+  const siteName = f.site === 'all' ? (isAdmin ? 'All sites' : 'All my sites') : (userSites.find((x) => String(x.id) === String(f.site)) || {}).name;
+  const presetLink = (p) => `/?${new URLSearchParams({ site: f.site, preset: p }).toString()}`;
+  const missingLabel = { electricity: 'Electricity', lpg: 'LPG', diesel: 'Diesel', generator: 'Generator log' };
+%>
+<div class="page-head">
+  <div>
+    <h1><%= siteName %></h1>
+    <p><%= range.label %>: <%= time.formatDate(range.from) %><%= range.from !== range.to ? ' – ' + time.formatDate(range.to) : '' %> · Asia/Karachi</p>
+  </div>
+  <div class="actions no-print">
+    <a class="btn btn-primary" href="/electricity/new">+ Daily entry</a>
+    <a class="btn btn-outline" href="/reports/<%= range.preset === 'last_month' ? 'monthly?month=' + range.from.slice(0, 7) + '&' : 'daily?from=' + range.from + '&to=' + range.to + '&' %>site=<%= f.site %>">Open report</a>
+  </div>
+</div>
+
+<form class="filters no-print" method="get" action="/">
+  <div class="field" style="flex:2 1 220px">
+    <label for="d-site">Site view</label>
+    <select id="d-site" name="site" data-autosubmit>
+      <option value="all"><%= isAdmin ? 'All sites' : 'All my sites' %></option>
+      <% for (const x of userSites) { %><option value="<%= x.id %>" <%= String(f.site) === String(x.id) ? 'selected' : '' %>><%= x.name %><%= x.is_active ? '' : ' (inactive)' %></option><% } %>
+    </select>
+  </div>
+  <div class="field" style="flex:3 1 320px">
+    <span style="display:block;font-weight:600;font-size:.78rem;margin-bottom:.3rem;color:var(--navy-800)">Period</span>
+    <div class="presets">
+      <% for (const [p, l] of [['today', 'Today'], ['yesterday', 'Yesterday'], ['this_month', 'This month'], ['last_month', 'Last month']]) { %>
+        <a class="preset <%= f.preset === p ? 'active' : '' %>" href="<%= presetLink(p) %>"><%= l %></a>
+      <% } %>
+    </div>
+  </div>
+  <input type="hidden" name="preset" value="custom">
+  <div class="field"><label for="d-from">Custom from</label><input id="d-from" type="date" name="from" value="<%= f.from %>"></div>
+  <div class="field"><label for="d-to">to</label><input id="d-to" type="date" name="to" value="<%= f.to %>"></div>
+  <button class="btn btn-navy" type="submit">Apply range</button>
+</form>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Electricity</div><div class="kpi-value"><%= fmt.num(s.electricity.totalKwh, 0) %><small>kWh</small></div>
+    <div class="kpi-note">Site <%= fmt.num(s.electricity.byLocation.site, 0) %> · Accom. <%= fmt.num(s.electricity.byLocation.accommodation, 0) %></div></div>
+  <div class="kpi"><div class="kpi-label">LPG</div><div class="kpi-value"><%= fmt.num(s.lpg.totalKg, 1) %><small>kg</small></div>
+    <div class="kpi-note"><% if (s.lpg.cylinders) { %>incl. <%= fmt.num(s.lpg.cylinders, 0) %> cylinders ≈ <%= fmt.num(s.lpg.kgFromCylinders, 0) %> kg<% } else { %>kg-based records<% } %></div></div>
+  <div class="kpi"><div class="kpi-label">Generator runtime</div><div class="kpi-value"><%= fmt.num(s.generators.hours, 1) %><small>h</small></div>
+    <div class="kpi-note"><% if (s.generators.running) { %><span class="badge badge-live"><%= s.generators.running %> running</span><% } else { %><%= s.generators.sessions.length %> sessions<% } %></div></div>
+  <div class="kpi"><div class="kpi-label">Diesel</div><div class="kpi-value"><%= fmt.num(s.diesel.litres, 0) %><small>L</small></div>
+    <div class="kpi-note"><%= s.diesel.perHour === null ? 'N/A' : fmt.num(s.diesel.perHour, 2) %> L per operating hour</div></div>
+  <div class="kpi"><div class="kpi-label">WAPDA bills</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(s.bills.amount) %></div>
+    <div class="kpi-note"><%= s.bills.count %> bill(s) · billing months <%= time.formatMonth(range.from.slice(0, 7)) %><%= range.from.slice(0, 7) !== range.to.slice(0, 7) ? ' – ' + time.formatMonth(range.to.slice(0, 7)) : '' %></div></div>
+  <div class="kpi"><div class="kpi-label">Paid</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(s.bills.paid) %></div><div class="kpi-note">Site <%= fmt.pkr(s.bills.byCategory.site.paid) %> · Accom. <%= fmt.pkr(s.bills.byCategory.accommodation.paid) %></div></div>
+  <div class="kpi <%= s.bills.outstanding > 0 ? 'warn' : '' %>"><div class="kpi-label">Outstanding</div><div class="kpi-value"><small>PKR</small> <%= fmt.pkr(s.bills.outstanding) %></div><div class="kpi-note"><a href="/bills?status=Unpaid">View unpaid bills →</a></div></div>
+  <div class="kpi <%= maint.overdue.length ? 'alert' : '' %>"><a href="/maintenance?site=<%= f.site %>"><div class="kpi-label">Duct cleaning</div><div class="kpi-value"><%= maint.overdue.length %><small>overdue</small></div><div class="kpi-note"><%= maint.due.length %> due within window</div></a></div>
+  <div class="kpi <%= missing.items.length ? 'warn' : '' %>"><div class="kpi-label">Missing entries</div><div class="kpi-value"><%= missing.items.length %></div>
+    <div class="kpi-note">Completeness <%= missing.completeness === null ? 'N/A' : missing.completeness + '%' %></div></div>
+</div>
+
+<div class="grid grid-2">
+  <section class="card"><div class="card-head"><h2>Daily electricity consumption (kWh)</h2><span class="muted small"><%= charts.trendLabel %></span></div><div class="chart-box"><canvas id="ch-elec" role="img" aria-label="Daily electricity consumption chart"></canvas></div></section>
+  <section class="card"><div class="card-head"><h2>LPG consumption (kg)</h2><span class="muted small"><%= charts.trendLabel %><%= s.lpg.cylinders ? ' · cylinders converted to kg' : '' %></span></div><div class="chart-box"><canvas id="ch-lpg" role="img" aria-label="LPG consumption chart"></canvas></div></section>
+  <section class="card"><div class="card-head"><h2>Generator runtime (hours)</h2><span class="muted small"><%= charts.trendLabel %></span></div><div class="chart-box"><canvas id="ch-runtime" role="img" aria-label="Generator runtime chart"></canvas></div></section>
+  <section class="card"><div class="card-head"><h2>Diesel consumption (litres)</h2><span class="muted small"><%= charts.trendLabel %></span></div><div class="chart-box"><canvas id="ch-diesel" role="img" aria-label="Diesel consumption chart"></canvas></div></section>
+  <section class="card">
+    <div class="card-head"><h2>Site-wise comparison</h2>
+      <div class="presets" role="group" aria-label="Metric">
+        <button type="button" class="preset active" data-site-metric="kwh">kWh</button>
+        <button type="button" class="preset" data-site-metric="lpg">LPG kg</button>
+        <button type="button" class="preset" data-site-metric="gen">Gen h</button>
+        <button type="button" class="preset" data-site-metric="diesel">Diesel L</button>
+        <button type="button" class="preset" data-site-metric="bills">Bills PKR</button>
+      </div>
+    </div>
+    <div class="chart-box tall"><canvas id="ch-sites" role="img" aria-label="Site comparison chart"></canvas></div>
+  </section>
+  <section class="card"><div class="card-head"><h2>Monthly electricity bills (PKR)</h2><span class="muted small">Last 6 billing months</span></div><div class="chart-box tall"><canvas id="ch-bills" role="img" aria-label="Monthly bill comparison chart"></canvas></div></section>
+</div>
+<script type="application/json" id="dash-data"><%- JSON.stringify(charts).replace(/</g, '\\u003c') %></script>
+
+<div class="grid grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Duct cleaning — overdue &amp; due</h2><a href="/maintenance?site=<%= f.site %>" class="small">All tasks →</a></div>
+    <% const tasks = [...maint.overdue, ...maint.due].slice(0, 10); %>
+    <% if (!tasks.length) { %><p class="empty">No overdue or upcoming cleaning tasks. 👍</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const t of tasks) { %>
+        <li><span><a href="/maintenance/tasks/<%= t.id %>"><%= t.item_name %></a><br><span class="muted small"><%= t.site_name %> · scheduled <%= time.formatDate(t.scheduled_date) %><%= t.assigned_to ? ' · ' + t.assigned_to : '' %></span></span><%- ui.badge(t.display_status) %></li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Missing daily entries</h2><span class="muted small">Not counted as zero</span></div>
+    <% if (!missing.items.length) { %><p class="empty">All required entries are recorded for this period.</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const m of missing.items.slice(0, 10)) { %>
+        <li><span><strong><%= missingLabel[m.type] %></strong> — <%= m.item %><br><span class="muted small"><%= m.site_name %> · <%= time.formatDate(m.date) %></span></span>
+          <a class="btn btn-outline btn-sm" href="/<%= m.type === 'generator' ? 'generator' : m.type %>/new?site=<%= m.site_id %>&date=<%= m.date %>">Enter</a></li>
+      <% } %>
+    </ul>
+    <% if (missing.items.length > 10) { %><p class="small muted">+ <%= missing.items.length - 10 %> more — see the daily report for the full list.</p><% } %>
+    <% } %>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Site summary</h2><span class="muted small"><%= range.label %></span></div>
+  <div class="table-wrap"><table class="responsive">
+    <thead><tr><th>Site</th><th class="num">Electricity (kWh)</th><th class="num">LPG (kg)</th><th class="num">Generator (h)</th><th class="num">Diesel (L)</th><th class="num">Bills (PKR)</th><th class="num">Missing</th></tr></thead>
+    <tbody>
+      <% for (const r of siteRows) { %>
+      <tr><td data-label="Site"><%= r.name %></td><td data-label="kWh" class="num"><%= fmt.num(r.kwh, 1) %></td><td data-label="LPG kg" class="num"><%= fmt.num(r.lpg, 1) %></td>
+        <td data-label="Gen h" class="num"><%= fmt.num(r.gen, 1) %></td><td data-label="Diesel L" class="num"><%= fmt.num(r.diesel, 1) %></td><td data-label="Bills" class="num"><%= fmt.pkr(r.bills) %></td>
+        <td data-label="Missing" class="num"><%- r.missing ? ui.badge(String(r.missing), 'warn') : '0' %></td></tr>
+      <% } %>
+    </tbody>
+    <tfoot><tr><td>Total</td><td class="num" data-label="kWh"><%= fmt.num(s.electricity.totalKwh, 1) %></td><td class="num" data-label="LPG kg"><%= fmt.num(s.lpg.totalKg, 1) %></td><td class="num" data-label="Gen h"><%= fmt.num(s.generators.hours, 1) %></td>
+      <td class="num" data-label="Diesel L"><%= fmt.num(s.diesel.litres, 1) %></td><td class="num" data-label="Bills"><%= fmt.pkr(s.bills.amount) %></td><td class="num" data-label="Missing"><%= missing.items.length %></td></tr></tfoot>
+  </table></div>
+</section>
+
+<div class="grid grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Recent records</h2><a class="small" href="/records?site=<%= f.site %>">Search all records →</a></div>
+    <% if (!recent.rows.length) { %><p class="empty">No records yet.</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const r of recent.rows) { %>
+      <li><span><span class="badge badge-info"><%= r.type_label %></span> <a href="<%= r.view_path %>"><%= r.summary %></a><br><span class="muted small"><%= r.site_name %> · <%= time.formatDate(r.date) %> · <%= r.entered_by || '—' %></span></span></li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Recent activity</h2><% if (isAdmin) { %><a class="small" href="/admin/audit">Audit trail →</a><% } %></div>
+    <% if (!activity.length) { %><p class="empty">No activity yet.</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const a of activity) { %>
+      <li><span><strong><%= a.username %></strong> <%= a.action.replace(/_/g, ' ') %> <%= a.entity_type.replace(/_/g, ' ') %><%= a.entity_id ? ' #' + a.entity_id : '' %><br><span class="muted small"><%= a.site_name || 'System' %> · <%= time.formatTimestamp(a.created_at) %></span></span></li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+</div>
+<%- include('partials/bottom', { scripts: ['/static/vendor/chart.umd.min.js', '/static/js/dashboard.js'] }) %>

@@ -1,0 +1,32 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Electricity reading <% if (rec.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></h1><p><%= rec.site_name %> · <%= rec.meter_name %> · <%= time.formatDate(rec.record_date) %></p></div>
+  <%- include('../partials/record-actions', { base: '/electricity' }) %>
+</div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Reading</h2>
+    <dl class="details">
+      <dt>Project site</dt><dd><%= rec.site_name %></dd>
+      <dt>Meter</dt><dd><%= rec.meter_name %></dd>
+      <dt>Location</dt><dd><%= rec.location === 'site' ? 'Project site' : 'Accommodation' %></dd>
+      <dt>Record date</dt><dd><%= time.formatDate(rec.record_date) %></dd>
+      <dt>Previous reading</dt><dd><%= fmt.num(rec.previous_reading) %></dd>
+      <dt>Current reading</dt><dd><%= fmt.num(rec.current_reading) %></dd>
+      <% if (rec.pre_event_kwh) { %><dt>From replaced/reset meter</dt><dd><%= fmt.num(rec.pre_event_kwh) %> kWh</dd><% } %>
+      <dt>Consumption</dt><dd><strong style="font-size:1.2rem"><%= fmt.num(rec.consumption_kwh) %> kWh</strong></dd>
+      <dt>Recorded by</dt><dd><%= rec.recorded_by %></dd>
+      <dt>Remarks</dt><dd><%= rec.remarks || '—' %></dd>
+    </dl>
+    <% if (event) { %><div class="alert alert-info" style="margin-top:1rem">Previous reading is the new baseline from a meter <strong><%= event.event_type %></strong> on <%= time.formatDate(event.event_date) %>: <%= event.reason %></div><% } %>
+  </section>
+  <section class="card">
+    <h2>Record information</h2>
+    <dl class="details">
+      <dt>Created by</dt><dd><%= createdBy || '—' %> · <%= time.formatTimestamp(rec.created_at) %></dd>
+      <dt>Last updated by</dt><dd><%= updatedBy || '—' %> · <%= time.formatTimestamp(rec.updated_at) %></dd>
+    </dl>
+  </section>
+</div>
+<%- include('../partials/history') %>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,50 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= title %></h1><p>Times are Asia/Karachi. Leave the stop time empty if the generator is still running.</p></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= record ? `/generator/${record.id}` : '/generator' %>" data-form="generator" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (record) { %>
+        <div class="field"><label>Project site</label><input type="text" readonly value="<%= record.site_name %>"></div>
+        <div class="field"><label>Generator</label><input type="text" readonly value="<%= record.generator_name %>"></div>
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors, dataset: { 'site-source': '1' } }) %>
+        <div class="field<%= errors.generator_id ? ' has-error' : '' %>">
+          <label for="f-generator_id">Generator <span class="req">*</span></label>
+          <select id="f-generator_id" name="generator_id" required data-site-filtered="site_id">
+            <option value="">Select generator…</option>
+            <% for (const g of generators) { %><option value="<%= g.id %>" data-site="<%= g.site_id %>" <%= String(values.generator_id) === String(g.id) ? 'selected' : '' %>><%= g.name %></option><% } %>
+          </select>
+          <% if (errors.generator_id) { %><small class="error-text" role="alert"><%= errors.generator_id %></small><% } %>
+        </div>
+      <% } %>
+      <%- ui.input({ name: 'start_at', type: 'datetime-local', label: 'Start date & time', required: true, value: values.start_at, errors }) %>
+      <div>
+        <%- ui.input({ name: 'stop_at', type: 'datetime-local', label: 'Stop date & time', value: values.stop_at, errors, hint: 'Empty = still running.' }) %>
+        <button type="button" class="btn btn-outline btn-sm" data-set-now="<%= time.nowLocal() %>" style="margin:-.4rem 0 .8rem">Stop time = now</button>
+      </div>
+      <%- ui.input({ name: 'opening_hour_meter', type: 'number', label: 'Opening hour-meter', value: values.opening_hour_meter, step: 'any', min: 0, inputmode: 'decimal', unit: 'h', errors, hint: 'Optional' }) %>
+      <%- ui.input({ name: 'closing_hour_meter', type: 'number', label: 'Closing hour-meter', value: values.closing_hour_meter, step: 'any', min: 0, inputmode: 'decimal', unit: 'h', errors, hint: 'Optional, once stopped' }) %>
+    </div>
+    <div class="calc" id="calc-box" aria-live="polite">
+      <div class="calc-row"><span>Runtime</span><span class="calc-result" id="runtime">—</span></div>
+      <div class="formula" id="runtime-note"></div>
+    </div>
+    <div class="form-grid">
+      <div class="field<%= errors.reason ? ' has-error' : '' %>">
+        <label for="f-reason">Reason for operation <span class="req">*</span></label>
+        <input id="f-reason" name="reason" list="reasons" required value="<%= values.reason || '' %>">
+        <datalist id="reasons"><option value="WAPDA load-shedding"><option value="Grid power failure"><option value="Voltage fluctuation"><option value="Scheduled test run"><option value="Maintenance"><option value="Event / peak load"></datalist>
+        <% if (errors.reason) { %><small class="error-text" role="alert"><%= errors.reason %></small><% } %>
+      </div>
+      <%- ui.input({ name: 'operator_name', label: 'Operator name', required: true, value: values.operator_name, errors }) %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors, cls: 'span-2' }) %>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= record ? 'Save changes' : 'Save session' %></button>
+      <a class="btn btn-outline" href="<%= record ? `/generator/${record.id}` : '/generator' %>">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

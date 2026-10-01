@@ -1,0 +1,32 @@
+<%- include('../partials/top') %>
+<% const fresh = !entity && values.name === undefined; const v = (k, d = 1) => (fresh ? d : Number(values[k]) ? 1 : 0); %>
+<div class="page-head"><div><h1><%= entity ? `Edit site: ${entity.name}` : 'New project site' %></h1></div><div class="actions"><a class="btn btn-outline" href="/admin/sites">Back to sites</a></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= entity ? `/admin/sites/${entity.id}` : '/admin/sites' %>" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <%- ui.input({ name: 'name', label: 'Site name', required: true, value: values.name, errors }) %>
+      <%- ui.input({ name: 'code', label: 'Short code', value: values.code, errors }) %>
+      <%- ui.input({ name: 'address', label: 'Address', value: values.address, errors, cls: 'span-2' }) %>
+    </div>
+    <fieldset>
+      <legend>Status &amp; required daily records</legend>
+      <%- ui.checkbox({ name: 'is_active', label: 'Site is active', checked: v('is_active') }) %>
+      <%- ui.checkbox({ name: 'req_electricity', label: 'Electricity readings required daily (per active, required meter)', checked: v('req_electricity') }) %>
+      <%- ui.checkbox({ name: 'req_lpg', label: 'LPG stock required daily', checked: v('req_lpg') }) %>
+      <%- ui.checkbox({ name: 'req_diesel', label: 'Diesel stock required daily (per active, required tank)', checked: v('req_diesel') }) %>
+      <%- ui.checkbox({ name: 'req_generator_log', label: 'Generator log required daily', checked: v('req_generator_log', 0), hint: 'Usually off: generators only run during outages.' }) %>
+    </fieldset>
+    <fieldset>
+      <legend>LPG unit</legend>
+      <div class="form-grid">
+        <%- ui.select({ name: 'lpg_unit', label: 'Unit of measurement', value: values.lpg_unit || 'kg', options: [{ value: 'kg', label: 'Kilograms (default)' }, { value: 'cylinder', label: 'Cylinders' }], errors }) %>
+        <%- ui.input({ name: 'lpg_cylinder_kg', type: 'number', label: 'Net LPG weight per cylinder', value: values.lpg_cylinder_kg ?? 45.4, step: 'any', min: 0.1, unit: 'kg', errors, hint: 'Used only to show kg equivalents; cylinder counts are never mixed with kg.' }) %>
+      </div>
+      <p class="small muted">Changing the unit applies to new records only. Existing records keep the unit they were entered in, and stock is not carried forward between different units.</p>
+    </fieldset>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save site</button></div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

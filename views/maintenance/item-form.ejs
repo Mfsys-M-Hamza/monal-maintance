@@ -1,0 +1,39 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= title %></h1></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= item ? `/maintenance/items/${item.id}` : '/maintenance/items' %>" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (item) { %>
+        <div class="field"><label>Project site</label><input type="text" readonly value="<%= item.site_name %>"></div>
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors }) %>
+      <% } %>
+      <%- ui.input({ name: 'name', label: 'Duct, equipment or area name', required: true, value: values.name, errors }) %>
+      <%- ui.input({ name: 'category', label: 'Category', value: values.category, errors }) %>
+      <div class="field">
+        <label for="f-frequency_value">Cleaning frequency <span class="req">*</span></label>
+        <div class="input-unit" style="gap:.5rem">
+          <input id="f-frequency_value" name="frequency_value" type="number" min="1" max="365" step="1" required value="<%= values.frequency_value %>" style="border-radius:8px;max-width:110px">
+          <select name="frequency_unit" aria-label="Frequency unit" style="flex:1">
+            <% for (const u of ['days', 'weeks', 'months']) { %><option value="<%= u %>" <%= values.frequency_unit === u ? 'selected' : '' %>><%= u %></option><% } %>
+          </select>
+        </div>
+        <% if (errors.frequency_value || errors.frequency_unit) { %><small class="error-text"><%= errors.frequency_value || errors.frequency_unit %></small><% } %>
+      </div>
+      <%- ui.input({ name: 'assigned_to', label: 'Assigned person or vendor', value: values.assigned_to, errors }) %>
+      <% if (!item) { %>
+        <%- ui.input({ name: 'last_completed_date', type: 'date', label: 'Last completed cleaning date', value: values.last_completed_date, max: today, errors, hint: 'Used to calculate the first scheduled date.' }) %>
+        <%- ui.input({ name: 'first_scheduled_date', type: 'date', label: 'Next scheduled date (override)', value: values.first_scheduled_date, errors, hint: 'Leave empty to calculate from the last completed date + frequency (or today if never cleaned).' }) %>
+      <% } %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors, cls: 'span-2' }) %>
+      <% if (item) { %><div class="span-2"><%- ui.checkbox({ name: 'is_active', label: 'Active (inactive items stop generating new tasks)', checked: !!Number(values.is_active) }) %></div><% } %>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Save item</button>
+      <a class="btn btn-outline" href="/maintenance/items">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

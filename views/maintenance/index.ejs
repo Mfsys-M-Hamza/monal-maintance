@@ -1,0 +1,42 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Duct cleaning &amp; maintenance</h1><p>Status is calculated daily: <strong>Due</strong> = scheduled within <%= dueWindow %> days, <strong>Overdue</strong> = past the scheduled date.</p></div>
+  <% if (isAdmin) { %><div class="actions"><a class="btn btn-outline" href="/maintenance/items">Manage items</a><a class="btn btn-primary" href="/maintenance/items/new">+ New item</a></div><% } %>
+</div>
+<form class="filters" method="get" action="/maintenance">
+  <input type="hidden" name="status" value="<%= tab %>">
+  <div class="field">
+    <label for="m-site">Site</label>
+    <select id="m-site" name="site" data-autosubmit>
+      <option value="all">All my sites</option>
+      <% for (const s of userSites) { %><option value="<%= s.id %>" <%= String(f.site) === String(s.id) ? 'selected' : '' %>><%= s.name %></option><% } %>
+    </select>
+  </div>
+  <button class="btn btn-navy no-print" type="submit">Apply</button>
+</form>
+<nav class="tabs" aria-label="Task status">
+  <% for (const [k, l] of [['open', 'All open'], ['Overdue', 'Overdue'], ['Due', 'Due'], ['Scheduled', 'Scheduled'], ['completed', 'Completed']]) { %>
+    <a class="tab <%= tab === k ? 'active' : '' %>" href="/maintenance?status=<%= k %>&site=<%= f.site %>"><%= l %><% if (counts[k] !== undefined) { %><span class="count"><%= counts[k] %></span><% } %></a>
+  <% } %>
+</nav>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Site</th><th>Duct / equipment / area</th><th>Frequency</th><th>Last completed</th><th><%= tab === 'completed' ? 'Completed on' : 'Next scheduled' %></th><th>Assigned to</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <% if (!rows.length) { %><tr><td colspan="8" class="empty">No tasks in this view.</td></tr><% } %>
+    <% for (const t of rows) { %>
+      <tr>
+        <td data-label="Site"><%= t.site_name %> <% if (t.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Item"><a href="/maintenance/tasks/<%= t.id %>"><%= t.item_name %></a><div class="muted small"><%= t.category %></div></td>
+        <td data-label="Frequency"><%= t.frequency_label %></td>
+        <td data-label="Last completed"><%= t.last_completed_date ? time.formatDate(t.last_completed_date) : '—' %></td>
+        <td data-label="<%= tab === 'completed' ? 'Completed' : 'Scheduled' %>" class="nowrap"><%= time.formatDate(tab === 'completed' ? t.completion_date : t.scheduled_date) %><% if (t.schedule_overridden && t.status === 'open') { %> <span class="badge badge-muted" title="Date set by admin override">override</span><% } %></td>
+        <td data-label="Assigned to"><%= (t.status === 'completed' ? t.completed_by_name : t.assigned_to) || '—' %></td>
+        <td data-label="Status"><%- ui.badge(t.display_status) %></td>
+        <td class="actions-cell"><a class="btn btn-<%= t.status === 'open' ? 'primary' : 'outline' %> btn-sm" href="/maintenance/tasks/<%= t.id %>"><%= t.status === 'open' ? 'Complete' : 'View' %></a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,22 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= entity ? `Edit tank: ${entity.name}` : 'New diesel tank' %></h1></div><div class="actions"><a class="btn btn-outline" href="/admin/equipment">Back</a></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= entity ? `/admin/tanks/${entity.id}` : '/admin/tanks' %>" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (entity) { %>
+        <div class="field"><label>Site</label><input type="text" readonly value="<%= (sites.find((s) => s.id === entity.site_id) || {}).name %>"></div>
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors }) %>
+      <% } %>
+      <%- ui.input({ name: 'name', label: 'Tank name', required: true, value: values.name, errors, placeholder: 'e.g. Main Diesel Tank' }) %>
+      <%- ui.select({ name: 'tank_type', label: 'Tank type', required: true, value: values.tank_type, placeholder: 'Select…', options: [{ value: 'individual', label: 'Individual — feeds one generator' }, { value: 'shared', label: 'Shared site tank — feeds several generators' }], errors }) %>
+      <%- ui.input({ name: 'capacity_l', type: 'number', label: 'Capacity', value: values.capacity_l, step: 'any', min: 0, unit: 'L', errors }) %>
+    </div>
+    <%- ui.checkbox({ name: 'is_required', label: 'Daily diesel record required (flag missing entries)', checked: values.is_required === undefined ? true : !!Number(values.is_required) }) %>
+    <% if (entity) { %><%- ui.checkbox({ name: 'is_active', label: 'Tank active', checked: !!Number(values.is_active) }) %><% } %>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save tank</button></div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

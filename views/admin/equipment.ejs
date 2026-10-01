@@ -1,0 +1,45 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Generators &amp; diesel tanks</h1><p>Each generator draws from one tank. An <strong>individual</strong> tank feeds one generator; a <strong>shared</strong> tank feeds several and is recorded once per day so diesel is never double-counted.</p></div>
+  <div class="actions"><a class="btn btn-outline" href="/admin/tanks/new">+ New tank</a><a class="btn btn-primary" href="/admin/generators/new">+ New generator</a></div>
+</div>
+<section class="card">
+  <h2>Diesel tanks</h2>
+  <div class="table-wrap"><table class="responsive">
+    <thead><tr><th>Site</th><th>Tank</th><th>Type</th><th class="num">Capacity (L)</th><th>Generators</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% if (!tanks.length) { %><tr><td colspan="7" class="empty">No tanks configured. Create a tank before adding generators.</td></tr><% } %>
+      <% for (const t of tanks) { %>
+      <tr>
+        <td data-label="Site"><%= t.site_name %></td>
+        <td data-label="Tank"><%= t.name %> <% if (t.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Type"><%- ui.badge(t.tank_type === 'shared' ? 'Shared' : 'Individual', t.tank_type === 'shared' ? 'info' : 'muted') %></td>
+        <td data-label="Capacity" class="num"><%= t.capacity_l ? fmt.num(t.capacity_l, 0) : '—' %></td>
+        <td data-label="Generators"><%= t.generators.map((g) => g.name).join(', ') || '—' %></td>
+        <td data-label="Status"><%- ui.badge(t.is_active ? 'Active' : 'Inactive') %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/admin/tanks/<%= t.id %>/edit">Edit</a></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table></div>
+</section>
+<section class="card">
+  <h2>Generators</h2>
+  <div class="table-wrap"><table class="responsive">
+    <thead><tr><th>Site</th><th>Generator</th><th class="num">Capacity (kVA)</th><th>Diesel tank</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% if (!generators.length) { %><tr><td colspan="6" class="empty">No generators configured.</td></tr><% } %>
+      <% for (const g of generators) { %>
+      <tr>
+        <td data-label="Site"><%= g.site_name %></td>
+        <td data-label="Generator"><%= g.name %> <% if (g.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Capacity" class="num"><%= g.capacity_kva ? fmt.num(g.capacity_kva, 0) : '—' %></td>
+        <td data-label="Tank"><%= g.tank_name ? `${g.tank_name} (${g.tank_type})` : '—' %></td>
+        <td data-label="Status"><%- ui.badge(g.is_active ? 'Active' : 'Inactive') %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/admin/generators/<%= g.id %>/edit">Edit</a></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table></div>
+</section>
+<%- include('../partials/bottom') %>

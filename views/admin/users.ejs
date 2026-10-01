@@ -1,0 +1,24 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Users</h1><p>No public registration — admins create accounts and assign sites. New users must change their password at first sign-in.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/admin/users/new">+ New user</a></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Sites</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+    <tbody>
+    <% for (const u of users) { %>
+      <tr>
+        <td data-label="Name"><%= u.full_name %> <% if (u.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %><div class="muted small"><%= u.email || '' %></div></td>
+        <td data-label="Username"><%= u.username %></td>
+        <td data-label="Role"><%- ui.badge(u.role === 'admin' ? 'Admin' : 'User', u.role === 'admin' ? 'info' : 'muted') %></td>
+        <td data-label="Sites"><%= u.role === 'admin' ? 'All sites' : (u.site_names.join(', ') || '—') %></td>
+        <td data-label="Status"><%- ui.badge(u.is_active ? 'Active' : 'Inactive') %><% if (u.must_change_password) { %> <span class="badge badge-warn">password change pending</span><% } %></td>
+        <td data-label="Last sign-in" class="small"><%= u.last_login_at ? time.formatTimestamp(u.last_login_at) : 'Never' %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/admin/users/<%= u.id %>/edit">Edit</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

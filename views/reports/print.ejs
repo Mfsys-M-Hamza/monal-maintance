@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= doc.title %> · <%= doc.periodLabel %></title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <style>
+    body { background: #fff; }
+    .print-wrap { max-width: 1200px; margin: 0 auto; padding: 1.2rem; }
+    .print-head { border-top: 5px solid var(--teal-600); padding-top: .8rem; margin-bottom: 1rem; }
+    .print-bar { display: flex; gap: .5rem; margin-bottom: 1rem; }
+    .print-footer { margin-top: 1.5rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: .4rem; }
+    @media print { .print-wrap { padding: 0; } .print-footer { position: fixed; bottom: 0; left: 0; right: 0; } }
+  </style>
+</head>
+<body>
+  <div class="print-wrap">
+    <div class="print-bar no-print"><button class="btn btn-primary" type="button" data-print>Print</button><a class="btn btn-outline" href="/reports/<%= kind %>?<%= exportQuery %>&format=pdf">Download PDF (with page numbers)</a></div>
+    <header class="print-head"><h1><%= doc.title %></h1></header>
+    <%- include('doc') %>
+    <div class="print-footer"><%= doc.title %> · <%= doc.periodLabel %> · <%= doc.siteLabel %> · Generated <%= doc.generatedAt %></div>
+  </div>
+  <script src="/static/js/print.js"></script>
+</body>
+</html>

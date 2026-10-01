@@ -1,0 +1,40 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1><%= doc ? doc.title : 'Reports' %></h1><p>Daily and monthly reports. Exports use exactly the same filters, figures and permissions.</p></div>
+  <% if (doc) { %>
+  <div class="actions no-print">
+    <a class="btn btn-outline" href="/reports/<%= kind %>?<%= exportQuery %>&format=print" target="_blank" rel="noopener">Print</a>
+    <a class="btn btn-outline" href="/reports/<%= kind %>?<%= exportQuery %>&format=pdf">PDF</a>
+    <a class="btn btn-outline" href="/reports/<%= kind %>?<%= exportQuery %>&format=xlsx">Excel</a>
+    <a class="btn btn-outline" href="/reports/<%= kind %>?<%= exportQuery %>&format=csv">CSV</a>
+  </div>
+  <% } %>
+</div>
+<form class="card no-print" method="get" action="/reports/<%= kind %>" data-form="report">
+  <div class="presets" role="radiogroup" aria-label="Report type" style="margin-bottom:.9rem">
+    <label class="preset <%= kind === 'daily' ? 'active' : '' %>"><input class="sr-only" type="radio" name="kind" value="daily" <%= kind === 'daily' ? 'checked' : '' %>> Daily report</label>
+    <label class="preset <%= kind === 'monthly' ? 'active' : '' %>"><input class="sr-only" type="radio" name="kind" value="monthly" <%= kind === 'monthly' ? 'checked' : '' %>> Monthly report</label>
+  </div>
+  <div class="form-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+    <div class="field"><label for="rp-site">Site</label><select id="rp-site" name="site"><option value="all"><%= isAdmin ? 'All sites' : 'All my sites' %></option>
+      <% for (const s of userSites) { %><option value="<%= s.id %>" <%= String(q.site) === String(s.id) ? 'selected' : '' %>><%= s.name %></option><% } %></select></div>
+    <div class="field" data-kind="daily"><label for="rp-from">From date</label><input id="rp-from" type="date" name="from" value="<%= q.from %>"></div>
+    <div class="field" data-kind="daily"><label for="rp-to">To date</label><input id="rp-to" type="date" name="to" value="<%= q.to %>"></div>
+    <div class="field" data-kind="monthly"><label for="rp-month">Month &amp; year</label><input id="rp-month" type="month" name="month" value="<%= q.month %>"></div>
+    <div class="field"><label for="rp-type">Record type</label><select id="rp-type" name="type"><option value="">All record types</option>
+      <% for (const [k, l] of [['electricity', 'Electricity'], ['lpg', 'LPG'], ['generator', 'Generator'], ['diesel', 'Diesel'], ['maintenance', 'Duct cleaning / maintenance'], ['bills', 'WAPDA bills']]) { %><option value="<%= k %>" <%= q.type === k ? 'selected' : '' %>><%= l %></option><% } %></select></div>
+    <div class="field"><label for="rp-loc">Project site / accommodation</label><select id="rp-loc" name="location"><option value="">Both</option>
+      <option value="site" <%= q.location === 'site' ? 'selected' : '' %>>Project site</option><option value="accommodation" <%= q.location === 'accommodation' ? 'selected' : '' %>>Accommodation</option></select></div>
+    <div class="field"><label for="rp-meter">Meter</label><select id="rp-meter" name="meter"><option value="">All meters</option>
+      <% for (const m of meters) { %><option value="<%= m.id %>" <%= String(q.meter) === String(m.id) ? 'selected' : '' %>><%= m.site_name %> — <%= m.name %></option><% } %></select></div>
+    <div class="field"><label for="rp-gen">Generator</label><select id="rp-gen" name="generator"><option value="">All generators</option>
+      <% for (const g of generators) { %><option value="<%= g.id %>" <%= String(q.generator) === String(g.id) ? 'selected' : '' %>><%= g.site_name %> — <%= g.name %></option><% } %></select></div>
+  </div>
+  <button class="btn btn-primary" type="submit">View report</button>
+</form>
+<% if (doc) { %>
+  <%- include('doc') %>
+<% } else { %>
+  <div class="card empty">Choose filters and select <strong>View report</strong>. Daily reports cover a date range (up to 93 days); monthly reports include a comparison with the previous month.</div>
+<% } %>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,12 @@
+<%# expects: base, rec, perms %>
+<div class="actions no-print">
+  <% if (perms.locked) { %><span class="badge badge-muted">🔒 Period locked</span><% } %>
+  <% if (perms.canEdit) { %><a class="btn btn-outline" href="<%= base %>/<%= rec.id %>/edit">Edit</a><% } %>
+  <% if (perms.canDelete) { %>
+    <form method="post" action="<%= base %>/<%= rec.id %>/delete" class="inline-form" data-confirm="Delete this record? It will be removed from all totals but kept in the audit trail.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  <% } %>
+  <a class="btn btn-outline" href="<%= base %>">Back to list</a>
+</div>

@@ -1,0 +1,28 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1>Period locks</h1><p>Lock completed months so records cannot be created, edited or deleted — by users or admins — until unlocked.</p></div></div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Lock a reporting period</h2>
+    <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+    <form method="post" action="/admin/locks" data-confirm="Lock this period? Users will no longer be able to edit records in it." novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <%- ui.input({ name: 'month', type: 'month', label: 'Month', required: true, value: values.month, errors, max: time.addMonthsToMonth(time.monthOf(today), -1) }) %>
+      <%- ui.select({ name: 'site_id', label: 'Site', value: values.site_id, placeholder: 'All sites', options: ui.siteOptions(sites), errors }) %>
+      <%- ui.input({ name: 'note', label: 'Note', value: values.note, errors }) %>
+      <button class="btn btn-navy" type="submit">Lock period</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Locked periods</h2>
+    <% if (!locks.length) { %><p class="muted">No periods are locked.</p><% } else { %>
+    <ul class="list-plain">
+      <% for (const l of locks) { %>
+        <li><span>🔒 <strong><%= time.formatMonth(l.month) %></strong> — <%= l.site_name || 'All sites' %><br><span class="muted small">by <%= l.locked_by_name || '—' %>, <%= time.formatTimestamp(l.locked_at) %><%= l.note ? ' · ' + l.note : '' %></span></span>
+          <form method="post" action="/admin/locks/<%= l.id %>/delete" class="inline-form" data-confirm="Unlock this period? Records in it will become editable again.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-outline btn-sm" type="submit">Unlock</button></form></li>
+      <% } %>
+    </ul>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/bottom') %>

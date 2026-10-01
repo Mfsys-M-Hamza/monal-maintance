@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f2a4a">
+  <title><%= title %> · Utilities & Maintenance</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230f8b8d'/><path d='M18 4 8 18h7l-2 10 11-15h-7z' fill='white'/></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<%
+  const icon = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const I = {
+    dash: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+    bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    gen: '<rect x="2" y="7" width="20" height="12" rx="2"/><path d="M6 7V5h4v2M12 10l-2 3h4l-2 3"/>',
+    fuel: '<path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17M3 22h12M15 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3M7 7h4"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+    bill: '<path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1 .7V2l-1 .7-3-2-3 2-3-2-3 2-3-2z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    report: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 18v-4M12 18v-7M16 18v-2"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+    site: '<path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4"/>',
+    meter: '<circle cx="12" cy="13" r="8"/><path d="M12 13l3-3M12 5V3M9 3h6"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    audit: '<path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  };
+  const nav = (href, label, ic, exact) => {
+    const active = exact ? path === href : (path === href || path.startsWith(href + '/'));
+    return `<a href="${href}" class="${active ? 'active' : ''}"${active ? ' aria-current="page"' : ''}>${icon(I[ic])}<span>${label}</span></a>`;
+  };
+%>
+<div class="app">
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true"><%- icon(I.bolt) %></span>
+      <span class="brand-text">Utilities & Maintenance<small>Project management system</small></span>
+    </a>
+    <nav class="nav">
+      <%- nav('/', 'Dashboard', 'dash', true) %>
+      <div class="nav-label">Daily entry</div>
+      <%- nav('/electricity', 'Electricity', 'bolt') %>
+      <%- nav('/lpg', 'LPG', 'flame') %>
+      <%- nav('/generator', 'Generator logbook', 'gen') %>
+      <%- nav('/diesel', 'Diesel', 'fuel') %>
+      <div class="nav-label">Operations</div>
+      <%- nav('/maintenance', 'Duct cleaning', 'wrench') %>
+      <%- nav('/bills', 'WAPDA bills', 'bill') %>
+      <%- nav('/records', 'Records', 'list') %>
+      <%- nav('/reports', 'Reports', 'report') %>
+      <% if (isAdmin) { %>
+      <div class="nav-label">Administration</div>
+      <%- nav('/admin/users', 'Users', 'users') %>
+      <%- nav('/admin/sites', 'Project sites', 'site') %>
+      <%- nav('/admin/meters', 'Meters', 'meter') %>
+      <%- nav('/admin/equipment', 'Generators & tanks', 'gen') %>
+      <%- nav('/maintenance/items', 'Maintenance items', 'wrench') %>
+      <%- nav('/admin/locks', 'Period locks', 'lock') %>
+      <%- nav('/admin/audit', 'Audit trail', 'audit') %>
+      <%- nav('/admin/settings', 'Settings & demo data', 'gear') %>
+      <% } %>
+    </nav>
+  </aside>
+  <div class="backdrop" data-nav-close></div>
+  <div class="main-col">
+    <header class="topbar">
+      <button class="menu-btn" type="button" data-nav-toggle aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="topbar-title"><%= title %></div>
+      <div class="user-menu">
+        <div class="user-chip"><strong><%= currentUser.full_name %></strong><span><%= currentUser.role === 'admin' ? 'Administrator' : 'Site user' %> · <%= today && time.formatDate(today) %></span></div>
+        <a class="btn btn-outline btn-sm" href="/account/password" title="Change password">Password</a>
+        <form method="post" action="/logout" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn-navy btn-sm" type="submit">Sign out</button>
+        </form>
+      </div>
+    </header>
+    <main id="main" class="content">
+      <% if (demoSeeded) { %>
+        <div class="alert alert-info no-print" role="status"><span><span class="badge badge-demo">DEMO</span> Demonstration data is loaded. Demo rows are labelled <strong>DEMO</strong>.<% if (isAdmin) { %> Remove it from <a href="/admin/settings">Settings &amp; demo data</a>.<% } %></span></div>
+      <% } %>
+      <% for (const f of flash) { %>
+        <div class="alert alert-<%= f.type === 'error' ? 'error' : f.type %>" role="<%= f.type === 'error' ? 'alert' : 'status' %>"><span><%= f.message %></span><button class="close" type="button" aria-label="Dismiss" data-dismiss>&times;</button></div>
+      <% } %>

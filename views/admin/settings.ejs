@@ -1,0 +1,32 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1>Settings &amp; demo data</h1></div></div>
+<div class="grid grid-2">
+  <section class="card">
+    <h2>Maintenance</h2>
+    <form method="post" action="/admin/settings">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <%- ui.input({ name: 'maintenance_due_window_days', type: 'number', label: 'Show tasks as "Due" this many days before the scheduled date', value: dueWindow, min: 0, max: 90, unit: 'days', errors: {} }) %>
+      <button class="btn btn-navy" type="submit">Save settings</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2>Demonstration data <%- demoSeeded ? '<span class="badge badge-demo">LOADED</span>' : '' %></h2>
+    <p class="small">Demo data creates sample meters, generators, tanks, 75 days of readings, sessions, bills and maintenance history for every site, plus a demo user limited to two sites. Every demo row is flagged and labelled <span class="badge badge-demo">DEMO</span>. The seven project sites are real configuration and are never removed.</p>
+    <% if (demoCredentials) { %>
+      <div class="alert alert-warn"><span>Demo site user: <strong><%= demoCredentials.username %></strong> / <code><%= demoCredentials.password %></code><br>This password is shown only once.</span></div>
+    <% } %>
+    <% if (demoSeeded) { %>
+      <p class="small muted">Currently loaded: <%= Object.entries(demoCounts).map(([k, v]) => `${v} ${k}`).join(', ') %>.</p>
+      <form method="post" action="/admin/demo/remove" data-confirm="Permanently remove all demonstration data? Real records are not affected.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-danger" type="submit">Remove all demo data</button>
+      </form>
+    <% } else { %>
+      <form method="post" action="/admin/demo/seed" data-confirm="Load demonstration data into the database?">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-primary" type="submit">Load demo data</button>
+      </form>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/bottom') %>

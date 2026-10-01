@@ -1,0 +1,45 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Generator logbook</h1><p>Operating sessions per generator. Sessions crossing midnight are split across dates in reports.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/generator/new">+ New session</a></div>
+</div>
+<% if (running.length) { %>
+<section class="card" style="border-left:4px solid #16a34a">
+  <div class="card-head"><h2>Running now</h2><span class="badge badge-live"><%= running.length %> running</span></div>
+  <ul class="list-plain">
+    <% for (const r of running) { %>
+      <li><span><strong><%= r.generator_name %></strong> · <%= r.site_name %><br><span class="muted small">Started <%= time.formatDateTime(r.start_at) %> · <%= fmt.num(r.runtime_hours, 2) %> h so far · <%= r.operator_name %></span></span>
+        <a class="btn btn-primary btn-sm" href="/generator/<%= r.id %>">Stop / view</a></li>
+    <% } %>
+  </ul>
+</section>
+<% } %>
+<% const genSel = `<div class="field"><label for="flt-gen">Generator</label><select id="flt-gen" name="generator"><option value="">All generators</option>${generators.map((g) => `<option value="${g.id}" ${String(query.generator) === String(g.id) ? 'selected' : ''}>${ui.esc(g.site_name + ' — ' + g.name)}</option>`).join('')}</select></div>`; %>
+<%- include('../partials/list-filters', { action: '/generator', extra: genSel }) %>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Runtime in period</div><div class="kpi-value"><%= fmt.num(totalHours, 2) %><small>h</small></div><div class="kpi-note"><%= time.formatDate(f.from) %> – <%= time.formatDate(f.to) %></div></div>
+  <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value"><%= pg.total %></div></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Site</th><th>Generator</th><th>Start</th><th>Stop</th><th class="num">Runtime (h)</th><th class="num">In period (h)</th><th>Reason</th><th>Operator</th><th></th></tr></thead>
+    <tbody>
+    <% if (!rows.length) { %><tr><td colspan="9" class="empty">No sessions for these filters. <a href="/generator/new">Log a session</a>.</td></tr><% } %>
+    <% for (const r of rows) { %>
+      <tr>
+        <td data-label="Site"><%= r.site_name %> <% if (r.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Generator"><%= r.generator_name %></td>
+        <td data-label="Start" class="nowrap"><%= time.formatDateTime(r.start_at) %></td>
+        <td data-label="Stop" class="nowrap"><%- r.stop_at ? ui.esc(time.formatDateTime(r.stop_at)) + (r.stop_at.slice(0, 10) !== r.start_at.slice(0, 10) ? ' <span class="badge badge-info">+1 day</span>' : '') : ui.badge('Running') %></td>
+        <td data-label="Runtime" class="num"><%= fmt.num(r.runtime_hours) %></td>
+        <td data-label="In period" class="num"><%= fmt.num(r.hours_in_range) %></td>
+        <td data-label="Reason"><%= r.reason %></td>
+        <td data-label="Operator"><%= r.operator_name %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/generator/<%= r.id %>">View</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- ui.pagination('/generator', Object.fromEntries(Object.entries(query).filter(([k]) => k !== 'page')), pg.page, pg.pages) %>
+<%- include('../partials/bottom') %>

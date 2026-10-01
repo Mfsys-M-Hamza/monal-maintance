@@ -1,0 +1,29 @@
+<%- include('../partials/top') %>
+<div class="page-head"><div><h1><%= entity ? `Edit meter: ${entity.name}` : 'New meter' %></h1></div><div class="actions"><a class="btn btn-outline" href="/admin/meters">Back to meters</a></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="<%= entity ? `/admin/meters/${entity.id}` : '/admin/meters' %>" novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (entity) { %>
+        <div class="field"><label>Site</label><input type="text" readonly value="<%= (sites.find((s) => s.id === entity.site_id) || {}).name %>"></div>
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors }) %>
+      <% } %>
+      <%- ui.input({ name: 'name', label: 'Meter name', required: true, value: values.name, errors, placeholder: 'e.g. Main Meter, Kitchen Meter' }) %>
+      <%- ui.select({ name: 'location', label: 'Location', required: true, value: values.location, placeholder: 'Select…', options: [{ value: 'site', label: 'Project site' }, { value: 'accommodation', label: 'Accommodation' }], errors }) %>
+      <%- ui.input({ name: 'account_ref', label: 'WAPDA account / reference no.', value: values.account_ref, errors }) %>
+      <%- ui.input({ name: 'serial_no', label: 'Meter serial number', value: values.serial_no, errors }) %>
+      <% if (!entity) { %>
+        <%- ui.input({ name: 'initial_reading', type: 'number', label: 'Initial (baseline) reading', required: true, value: values.initial_reading, step: 'any', min: 0, unit: 'kWh', errors }) %>
+        <%- ui.input({ name: 'initial_date', type: 'date', label: 'Baseline reading date', required: true, value: values.initial_date || today, errors, hint: 'The first daily reading is compared against this baseline.' }) %>
+      <% } else { %>
+        <div class="field span-2"><p class="small muted">Baseline: <%= fmt.num(entity.initial_reading) %> kWh on <%= time.formatDate(entity.initial_date) %>. To change the reading baseline, record a meter event (replacement / reset / correction).</p></div>
+      <% } %>
+    </div>
+    <%- ui.checkbox({ name: 'is_required', label: 'Daily reading required (flag missing entries)', checked: values.is_required === undefined ? true : !!Number(values.is_required) }) %>
+    <% if (entity) { %><%- ui.checkbox({ name: 'is_active', label: 'Meter active', checked: !!Number(values.is_active) }) %><% } %>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save meter</button></div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

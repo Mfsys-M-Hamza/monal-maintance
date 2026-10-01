@@ -1,0 +1,37 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Electricity consumption</h1><p>Daily meter readings. Consumption = current reading − previous reading.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/electricity/new">+ New reading</a></div>
+</div>
+<%
+  const meterSel = `<div class="field"><label for="flt-meter">Meter</label><select id="flt-meter" name="meter"><option value="">All meters</option>${meters.map((m) => `<option value="${m.id}" ${String(query.meter) === String(m.id) ? 'selected' : ''}>${ui.esc(m.site_name + ' — ' + m.name)}</option>`).join('')}</select></div>`;
+  const locSel = `<div class="field"><label for="flt-loc">Location</label><select id="flt-loc" name="location"><option value="">Site &amp; accommodation</option><option value="site" ${query.location === 'site' ? 'selected' : ''}>Project site</option><option value="accommodation" ${query.location === 'accommodation' ? 'selected' : ''}>Accommodation</option></select></div>`;
+%>
+<%- include('../partials/list-filters', { action: '/electricity', extra: meterSel + locSel }) %>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Total consumption</div><div class="kpi-value"><%= fmt.num(total, 2) %><small>kWh</small></div><div class="kpi-note"><%= time.formatDate(f.from) %> – <%= time.formatDate(f.to) %></div></div>
+  <div class="kpi"><div class="kpi-label">Readings</div><div class="kpi-value"><%= pg.total %></div></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Date</th><th>Site</th><th>Meter</th><th>Location</th><th class="num">Previous</th><th class="num">Current</th><th class="num">kWh</th><th>Recorded by</th><th></th></tr></thead>
+    <tbody>
+    <% if (!rows.length) { %><tr><td colspan="9" class="empty">No readings for these filters. <a href="/electricity/new">Add a reading</a>.</td></tr><% } %>
+    <% for (const r of rows) { %>
+      <tr>
+        <td data-label="Date" class="nowrap"><%= time.formatDate(r.record_date) %> <% if (r.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Site"><%= r.site_name %></td>
+        <td data-label="Meter"><%= r.meter_name %></td>
+        <td data-label="Location"><%= r.location === 'site' ? 'Project site' : 'Accommodation' %></td>
+        <td data-label="Previous" class="num"><%= fmt.num(r.previous_reading) %></td>
+        <td data-label="Current" class="num"><%= fmt.num(r.current_reading) %></td>
+        <td data-label="kWh" class="num"><strong><%= fmt.num(r.consumption_kwh) %></strong><% if (r.pre_event_kwh) { %> <span class="badge badge-info" title="Includes consumption from a replaced/reset meter">meter event</span><% } %></td>
+        <td data-label="Recorded by"><%= r.recorded_by %><div class="muted small">entered by <%= r.entered_by || '—' %></div></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/electricity/<%= r.id %>">View</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- ui.pagination('/electricity', Object.fromEntries(Object.entries(query).filter(([k]) => k !== 'page')), pg.page, pg.pages) %>
+<%- include('../partials/bottom') %>

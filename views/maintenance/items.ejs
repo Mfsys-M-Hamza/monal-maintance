@@ -1,0 +1,26 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Maintenance items</h1><p>Ducts, equipment and areas with their cleaning frequency.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/maintenance/items/new">+ New item</a></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Site</th><th>Name</th><th>Category</th><th>Frequency</th><th>Assigned to</th><th>Last completed</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    <% if (!items.length) { %><tr><td colspan="8" class="empty">No maintenance items yet.</td></tr><% } %>
+    <% for (const i of items) { %>
+      <tr>
+        <td data-label="Site"><%= i.site_name %> <% if (i.is_demo) { %><span class="badge badge-demo">DEMO</span><% } %></td>
+        <td data-label="Name"><%= i.name %></td>
+        <td data-label="Category"><%= i.category %></td>
+        <td data-label="Frequency"><%= i.frequency_label %></td>
+        <td data-label="Assigned"><%= i.assigned_to || '—' %></td>
+        <td data-label="Last completed"><%= i.last_done ? time.formatDate(i.last_done) : '—' %></td>
+        <td data-label="Status"><%- ui.badge(i.is_active ? 'Active' : 'Inactive') %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/maintenance/items/<%= i.id %>/edit">Edit</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

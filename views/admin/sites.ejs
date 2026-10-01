@@ -1,0 +1,26 @@
+<%- include('../partials/top') %>
+<div class="page-head">
+  <div><h1>Project sites</h1><p>Site names are configuration, not code. Deactivated sites keep their history but accept no new entries and are not flagged for missing data.</p></div>
+  <div class="actions"><a class="btn btn-primary" href="/admin/sites/new">+ New site</a></div>
+</div>
+<div class="table-wrap">
+  <table class="responsive">
+    <thead><tr><th>Site</th><th>Status</th><th>Required daily records</th><th>LPG unit</th><th class="num">Meters</th><th class="num">Generators</th><th class="num">Tanks</th><th class="num">Users</th><th></th></tr></thead>
+    <tbody>
+    <% for (const s of sites) { const c = counts[s.id] || {}; %>
+      <tr>
+        <td data-label="Site"><strong><%= s.name %></strong><% if (s.code) { %> <span class="muted small">(<%= s.code %>)</span><% } %></td>
+        <td data-label="Status"><%- ui.badge(s.is_active ? 'Active' : 'Inactive') %></td>
+        <td data-label="Required"><%= [s.req_electricity && 'Electricity', s.req_lpg && 'LPG', s.req_diesel && 'Diesel', s.req_generator_log && 'Generator log'].filter(Boolean).join(', ') || 'None' %></td>
+        <td data-label="LPG unit"><%= s.lpg_unit === 'kg' ? 'kg' : `cylinders (${s.lpg_cylinder_kg} kg)` %></td>
+        <td data-label="Meters" class="num"><a href="/admin/meters?site=<%= s.id %>"><%= c.meters || 0 %></a></td>
+        <td data-label="Generators" class="num"><%= c.generators || 0 %></td>
+        <td data-label="Tanks" class="num"><%= c.tanks || 0 %></td>
+        <td data-label="Users" class="num"><%= c.users || 0 %></td>
+        <td class="actions-cell"><a class="btn btn-outline btn-sm" href="/admin/sites/<%= s.id %>/edit">Edit</a></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('../partials/bottom') %>

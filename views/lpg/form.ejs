@@ -1,0 +1,33 @@
+<%- include('../partials/top') %>
+<%
+  const site = record ? userSites.find((s) => s.id === record.site_id) : null;
+  const unit = record ? (record.unit === 'kg' ? 'kg' : 'cylinders') : 'kg';
+%>
+<div class="page-head"><div><h1><%= title %></h1><p>Daily LPG stock balance for one site.</p></div></div>
+<div class="card" style="max-width:820px">
+  <% if (error) { %><div class="alert alert-error" role="alert"><%= error %></div><% } %>
+  <div id="entry-notice" hidden></div>
+  <form method="post" action="<%= record ? `/lpg/${record.id}` : '/lpg' %>" data-form="stock" data-kind="lpg" data-scope="site_id" data-unit="<%= unit %>" <%- record ? `data-record-id="${record.id}"` : '' %> novalidate>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="form-grid">
+      <% if (record) { %>
+        <div class="field"><label>Project site</label><input type="text" readonly value="<%= record.site_name %>"></div>
+        <input type="hidden" name="site_id" value="<%= record.site_id %>">
+      <% } else { %>
+        <%- ui.select({ name: 'site_id', label: 'Project site', required: true, options: ui.siteOptions(sites), value: values.site_id, placeholder: 'Select site…', errors }) %>
+      <% } %>
+      <%- ui.input({ name: 'record_date', type: 'date', label: 'Date', required: true, value: values.record_date, max: today, errors }) %>
+    </div>
+    <p class="small muted" id="unit-note"><%= record ? (record.unit === 'kg' ? 'Recorded in kilograms.' : `Recorded in cylinders (net ${record.cylinder_kg} kg per cylinder).`) : 'Select a site to see its LPG unit.' %></p>
+    <%- include('../partials/stock-fields', { unitLabel: unit, formula: 'LPG consumed = Opening stock + Received − Closing stock' }) %>
+    <div class="form-grid">
+      <%- ui.input({ name: 'recorded_by', label: 'Recorded by', required: true, value: values.recorded_by, errors }) %>
+      <%- ui.textarea({ name: 'remarks', label: 'Remarks', value: values.remarks, errors }) %>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit"><%= record ? 'Save changes' : 'Save record' %></button>
+      <a class="btn btn-outline" href="<%= record ? `/lpg/${record.id}` : '/lpg' %>">Cancel</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

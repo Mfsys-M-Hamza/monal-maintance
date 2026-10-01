@@ -1,0 +1,24 @@
+<%# Shared opening / received / closing inputs with live calculation. expects: values, errors, unitLabel %>
+<div class="form-grid">
+  <div class="field<%= errors.opening ? ' has-error' : '' %>">
+    <label for="f-opening">Opening stock (<span data-unit-label><%= unitLabel %></span>)</label>
+    <input id="f-opening" name="opening" type="number" step="any" min="0" inputmode="decimal" value="<%= values.opening ?? '' %>" aria-describedby="opening-hint">
+    <small class="hint" id="opening-hint">Carried forward from the previous closing stock when available.</small>
+    <% if (errors.opening) { %><small class="error-text" role="alert"><%= errors.opening %></small><% } %>
+  </div>
+  <div class="field<%= errors.received ? ' has-error' : '' %>">
+    <label for="f-received">Received (<span data-unit-label><%= unitLabel %></span>)</label>
+    <input id="f-received" name="received" type="number" step="any" min="0" inputmode="decimal" value="<%= values.received ?? '' %>" placeholder="0">
+    <% if (errors.received) { %><small class="error-text" role="alert"><%= errors.received %></small><% } %>
+  </div>
+  <div class="field<%= errors.closing ? ' has-error' : '' %>">
+    <label for="f-closing">Closing stock (<span data-unit-label><%= unitLabel %></span>) <span class="req">*</span></label>
+    <input id="f-closing" name="closing" type="number" step="any" min="0" inputmode="decimal" required value="<%= values.closing ?? '' %>">
+    <% if (errors.closing) { %><small class="error-text" role="alert"><%= errors.closing %></small><% } %>
+  </div>
+</div>
+<div class="calc" id="calc-box" aria-live="polite">
+  <div class="calc-row"><span>Consumed</span><span class="calc-result" id="consumed">—</span></div>
+  <div class="formula"><%= formula %></div>
+  <div class="small" id="mismatch-note" hidden style="color:var(--warn);margin-top:.3rem">Opening stock differs from the previous closing stock — please explain in Remarks.</div>
+</div>
