@@ -1,0 +1,34 @@
+# Render Blueprint — deploy from GitHub: Render dashboard → New → Blueprint → select this repo.
+# A persistent disk keeps the SQLite database and uploaded files across deploys and restarts.
+services:
+  - type: web
+    name: monal-maintenance
+    runtime: node
+    plan: starter          # persistent disks require a paid instance
+    region: singapore      # closest Render region to Pakistan
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /login
+    autoDeploy: true       # redeploy on every push to main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DATABASE_PATH
+        value: /var/data/app.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      # First admin (entered in the Render dashboard, never committed). Remove after first sign-in.
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

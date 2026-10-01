@@ -143,6 +143,14 @@ Every operational record has `created_by/at`, `updated_by/at` and `deleted_at/by
 `GET /api/me`, `/api/sites`, `/api/meters?site=`, `/api/generators?site=`, `/api/tanks?site=`, `/api/electricity/previous?meter=&date=`, `/api/lpg/suggest`, `/api/diesel/suggest`, `/api/dashboard?site=&preset=|from=&to=`, `/api/records`, `/api/reports/daily|monthly`.
 `POST /api/electricity`, `/api/lpg`, `/api/diesel` and `/api/generator-sessions` create records. They need the `X-CSRF-Token` header and go through the same validation and permission checks as the forms.
 
+## Deploy from GitHub (Render)
+1. Sign in at https://render.com with GitHub. Choose **New → Blueprint** and select this repository. Render reads `render.yaml`.
+2. When prompted, enter `ADMIN_USERNAME` and `ADMIN_PASSWORD` (at least 10 characters, with letters and numbers). They create the first admin on first start, and that admin must change the password at first sign-in.
+3. Apply the blueprint. The app is then live at `https://<service-name>.onrender.com`. Every push to `main` redeploys it.
+4. After signing in, delete `ADMIN_USERNAME` and `ADMIN_PASSWORD` from the service's Environment settings.
+
+The blueprint uses a Starter instance with a 1 GB persistent disk at `/var/data` for the database and uploads. Free instances lose files on restart, so they are not suitable.
+
 ## Production notes
 - Run behind HTTPS (nginx, Caddy or IIS) with `NODE_ENV=production`, `TRUST_PROXY=true` and a strong `SESSION_SECRET`.
 - Back up `DATABASE_PATH` and `UPLOAD_DIR` together.
