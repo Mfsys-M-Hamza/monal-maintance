@@ -22,6 +22,7 @@ const config = {
   root: ROOT,
   isProd,
   port: Number(env.PORT) || 3000,
+  host: env.HOST || undefined, // e.g. 127.0.0.1 behind a reverse proxy
   databasePath: resolvePath(env.DATABASE_PATH, 'data/app.db'),
   uploadDir: resolvePath(env.UPLOAD_DIR, 'storage/uploads'),
   maxUploadBytes: (Number(env.MAX_UPLOAD_MB) || 5) * 1024 * 1024,

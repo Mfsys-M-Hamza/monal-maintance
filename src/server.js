@@ -30,7 +30,7 @@ function bootstrapAdmin() {
 
 const hasAdmin = bootstrapAdmin();
 
-app.listen(config.port, () => {
+app.listen(config.port, config.host, () => {
   console.log(`Utilities & Maintenance Management System running on http://localhost:${config.port}`);
   console.log(`Database: ${config.databasePath}`);
   if (!hasAdmin) console.log('No admin account exists yet. Create one with:  npm run create-admin  (or set ADMIN_USERNAME / ADMIN_PASSWORD)');
