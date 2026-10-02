@@ -25,6 +25,16 @@ if [ -z "$DOMAIN" ]; then
 fi
 echo "==> Setting up for https://${DOMAIN}"
 
+MEM_MB="$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)"
+if [ "$MEM_MB" -lt 2048 ] && ! swapon --show | grep -q .; then
+  echo "==> Low memory (${MEM_MB} MB): adding a 2 GB swap file"
+  fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
 echo "==> Installing system packages"
 apt-get update -y
 apt-get install -y curl git ca-certificates gnupg sqlite3 debian-keyring debian-archive-keyring apt-transport-https
